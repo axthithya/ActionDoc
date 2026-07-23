@@ -6,6 +6,15 @@ from typing import Any, Self
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
+class YamlLocation(BaseModel):
+    """One-based source position for a parsed YAML path."""
+
+    model_config = ConfigDict(frozen=True)
+
+    line: int = Field(ge=1)
+    column: int = Field(ge=1)
+
+
 class WorkflowFile(BaseModel):
     """A successfully loaded and parsed workflow file."""
 
@@ -15,6 +24,11 @@ class WorkflowFile(BaseModel):
     relative_path: str = Field(min_length=1)
     raw_text: str
     parsed_content: dict[str, Any]
+    source_locations: dict[str, YamlLocation] = Field(default_factory=dict)
+
+    def location_for(self, yaml_path: str) -> YamlLocation | None:
+        """Return a source position when the parser captured one."""
+        return self.source_locations.get(yaml_path)
 
 
 class WorkflowParseError(BaseModel):

@@ -3,9 +3,10 @@
 ActionDoctor is an open-source, offline CLI for finding security, reliability,
 cost, and maintainability problems in GitHub Actions workflows.
 
-The CLI currently discovers and validates workflow YAML, then runs two
-demonstration rules through a reusable rule engine. The full rule catalog and
-final health score are planned but are not implemented yet.
+The CLI currently discovers and validates workflow YAML, then runs an initial
+five-rule security pack plus two demonstration rules through a reusable rule
+engine. The full cross-category catalog and final health score are planned but
+are not implemented yet.
 
 ## Requirements
 
@@ -80,7 +81,7 @@ Repository: /path/to/repository
 Workflow files discovered: 3
 Successfully parsed: 2
 Failed to parse: 1
-Total rules executed: 4
+Total rules executed: 14
 Total findings: 1
 Rule execution failures: 0
 
@@ -103,8 +104,13 @@ means the repository path was invalid or an unexpected application error
 occurred. A missing or empty workflow directory is a successful empty scan
 with exit code `0` and an explanatory message.
 
-## Current demonstration rules
+## Current rules
 
+- `SEC001` — Overly Broad Workflow Permissions (`high`/`critical`)
+- `SEC002` — Missing Explicit Permissions (`medium`)
+- `SEC003` — Third-Party Action Not Pinned to Commit SHA (`high`)
+- `SEC004` — Untrusted Pull Request Checkout Risk (`critical`)
+- `SEC005` — Secret Exposed Through Workflow-Level Environment (`medium`)
 - `MAINT001` — Missing Workflow Name (`low`)
 - `REL001` — Missing Jobs (`high`)
 
@@ -113,8 +119,10 @@ validation, and contributor instructions.
 
 ## Current limitations
 
-- Only two demonstration rules are currently available; this is not yet the
-  complete security, reliability, cost, and maintainability catalog.
+- The current security pack is intentionally focused and does not constitute a
+  complete GitHub Actions security audit.
+- Cost and broader reliability/maintainability rule packs are not yet
+  implemented.
 - The health score remains a placeholder and is not shown by `scan`.
 - JSON, Markdown, and SARIF reports are not available.
 - Only workflow files directly inside `.github/workflows/` are discovered,

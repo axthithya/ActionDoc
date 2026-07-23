@@ -1,8 +1,9 @@
+name: Branch action
 on: push
 permissions:
   contents: read
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "valid"
+      - uses: vendor/action@main

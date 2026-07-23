@@ -57,8 +57,11 @@ class RuleEngine:
                         )
                     )
 
+        unique_findings = {
+            self._finding_identity(finding): finding for finding in findings
+        }
         return RuleEngineResult(
-            findings=sorted(findings, key=self._finding_sort_key),
+            findings=sorted(unique_findings.values(), key=self._finding_sort_key),
             execution_errors=execution_errors,
             rules_executed=rules_executed,
         )
@@ -74,4 +77,16 @@ class RuleEngine:
             finding.rule_id,
             finding.title.casefold(),
             finding.title,
+        )
+
+    @staticmethod
+    def _finding_identity(finding: Finding) -> tuple[object, ...]:
+        """Identify duplicate reports for the same rule and YAML location."""
+        return (
+            finding.rule_id,
+            finding.file_path.as_posix(),
+            finding.yaml_path,
+            finding.line,
+            finding.column,
+            finding.job_id,
         )

@@ -1,0 +1,7 @@
+name: Reusable job
+on: push
+permissions:
+  contents: read
+jobs:
+  call:
+    uses: ./.github/workflows/reusable.yml

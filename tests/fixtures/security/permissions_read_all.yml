@@ -1,0 +1,8 @@
+name: Read permissions
+on: push
+permissions: read-all
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "test"

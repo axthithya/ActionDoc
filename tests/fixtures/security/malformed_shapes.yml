@@ -1,0 +1,13 @@
+name: Malformed shapes
+on: push
+jobs:
+  scalar-job: invalid
+  malformed-steps:
+    steps:
+      unexpected: mapping
+  mixed-steps:
+    steps:
+      - null
+      - string
+      - uses: 42
+      - run: echo "valid mapping"

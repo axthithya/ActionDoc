@@ -1,2 +1,4 @@
 name: No Jobs
 on: push
+permissions:
+  contents: read

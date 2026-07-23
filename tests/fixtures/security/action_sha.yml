@@ -1,0 +1,9 @@
+name: SHA action
+on: push
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: vendor/action@0123456789abcdef0123456789abcdef01234567

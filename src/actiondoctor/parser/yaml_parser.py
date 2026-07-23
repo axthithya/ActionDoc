@@ -7,7 +7,7 @@ from typing import Any
 from ruamel.yaml import YAML
 from ruamel.yaml.error import MarkedYAMLError, YAMLError
 
-from actiondoctor.models import WorkflowFile, WorkflowParseError
+from actiondoctor.models import WorkflowFile, WorkflowParseError, YamlLocation
 
 
 class WorkflowParser:
@@ -51,6 +51,7 @@ class WorkflowParser:
             relative_path=relative_path,
             raw_text=raw_text,
             parsed_content=self._to_serializable_content(parsed),
+            source_locations=self._collect_locations(parsed),
         )
 
     @staticmethod
@@ -83,3 +84,43 @@ class WorkflowParser:
         if isinstance(value, list):
             return [WorkflowParser._to_serializable_content(item) for item in value]
         return value
+
+    @classmethod
+    def _collect_locations(
+        cls,
+        value: Any,
+        yaml_path: str = "",
+    ) -> dict[str, YamlLocation]:
+        """Collect practical key/item positions from ruamel round-trip nodes."""
+        locations: dict[str, YamlLocation] = {}
+        if isinstance(value, Mapping):
+            for key, item in value.items():
+                key_path = f"{yaml_path}.{key}" if yaml_path else str(key)
+                location = cls._mapping_key_location(value, key)
+                if location is not None:
+                    locations[key_path] = location
+                locations.update(cls._collect_locations(item, key_path))
+        elif isinstance(value, list):
+            for index, item in enumerate(value):
+                item_path = f"{yaml_path}[{index}]"
+                location = cls._sequence_item_location(value, index)
+                if location is not None:
+                    locations[item_path] = location
+                locations.update(cls._collect_locations(item, item_path))
+        return locations
+
+    @staticmethod
+    def _mapping_key_location(value: Any, key: Any) -> YamlLocation | None:
+        try:
+            line, column = value.lc.key(key)
+        except (AttributeError, KeyError, TypeError):
+            return None
+        return YamlLocation(line=line + 1, column=column + 1)
+
+    @staticmethod
+    def _sequence_item_location(value: Any, index: int) -> YamlLocation | None:
+        try:
+            line, column = value.lc.item(index)
+        except (AttributeError, IndexError, TypeError):
+            return None
+        return YamlLocation(line=line + 1, column=column + 1)

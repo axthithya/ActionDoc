@@ -8,6 +8,7 @@ from actiondoctor.models.workflow import (
     WorkflowFile,
     WorkflowLoadResult,
     WorkflowParseError,
+    YamlLocation,
 )
 
 __all__ = [
@@ -21,4 +22,5 @@ __all__ = [
     "WorkflowFile",
     "WorkflowLoadResult",
     "WorkflowParseError",
+    "YamlLocation",
 ]

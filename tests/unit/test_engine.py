@@ -44,13 +44,16 @@ class FailingRule:
 def test_engine_runs_every_rule_across_multiple_workflows() -> None:
     """The execution count is rule/workflow evaluations, not distinct rules."""
     workflows = [
-        workflow("valid.yml", {"name": "CI", "jobs": {"test": {}}}),
-        workflow("incomplete.yml", {}),
+        workflow(
+            "valid.yml",
+            {"name": "CI", "permissions": {}, "jobs": {"test": {}}},
+        ),
+        workflow("incomplete.yml", {"permissions": {}}),
     ]
 
     result = RuleEngine().run(workflows, DEFAULT_REGISTRY.rules)
 
-    assert result.rules_executed == 4
+    assert result.rules_executed == 14
     assert [finding.rule_id for finding in result.findings] == [
         "REL001",
         "MAINT001",
@@ -75,12 +78,17 @@ def test_engine_collects_multiple_findings_from_one_workflow() -> None:
 def test_engine_returns_no_findings_for_valid_workflow() -> None:
     """A complete workflow remains clean under both demonstration rules."""
     result = RuleEngine().run(
-        [workflow("valid.yml", {"name": "CI", "jobs": {"test": {}}})],
+        [
+            workflow(
+                "valid.yml",
+                {"name": "CI", "permissions": {}, "jobs": {"test": {}}},
+            )
+        ],
         DEFAULT_REGISTRY.rules,
     )
 
     assert result.findings == []
-    assert result.rules_executed == 2
+    assert result.rules_executed == 7
 
 
 def test_engine_isolates_rule_execution_failure() -> None:
@@ -198,3 +206,33 @@ def test_engine_sorts_findings_deterministically() -> None:
         ("a.yml", "SEC001"),
         ("b.yml", "COST001"),
     ]
+
+
+def test_engine_deduplicates_same_rule_and_yaml_location() -> None:
+    """Identical reports for one rule/location appear only once."""
+
+    class DuplicateRule:
+        rule_id = "SEC001"
+        title = "Duplicate"
+        description = "Returns the same finding twice."
+        category = RuleCategory.SECURITY
+        default_severity = Severity.HIGH
+
+        def evaluate(self, candidate: WorkflowFile) -> list[Finding]:
+            finding = Finding(
+                rule_id=self.rule_id,
+                title=self.title,
+                description=self.description,
+                severity=self.default_severity,
+                category=self.category,
+                file_path=Path(candidate.relative_path),
+                yaml_path="permissions",
+            )
+            return [finding, finding]
+
+    result = RuleEngine().run(
+        [workflow("duplicate.yml", {"name": "CI", "jobs": {"test": {}}})],
+        [DuplicateRule()],
+    )
+
+    assert len(result.findings) == 1

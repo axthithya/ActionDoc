@@ -45,6 +45,147 @@ different meaning.
 
 ## Current rules
 
+### SEC001 — Overly Broad Workflow Permissions
+
+- Severity: critical for `write-all`; high for mappings with at least two
+  declared scopes all set to `write`.
+- Detects broad top-level write permission grants.
+- Why it matters: an unnecessarily powerful `GITHUB_TOKEN` increases the
+  impact of a compromised step.
+
+Bad:
+
+```yaml
+permissions: write-all
+```
+
+Safer:
+
+```yaml
+permissions:
+  contents: read
+  pull-requests: write
+```
+
+Known limitations: SEC001 does not determine the permissions a workflow
+actually needs. A single explicitly writable scope is treated as narrow to
+avoid flagging every legitimate write operation.
+
+### SEC002 — Missing Explicit Permissions
+
+- Severity: medium.
+- Detects a missing top-level `permissions` key when at least one job also
+  lacks its own declaration.
+- Why it matters: explicit permissions avoid relying on repository or
+  organization defaults that may change.
+
+Bad:
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+```
+
+Safer:
+
+```yaml
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+```
+
+Known limitations: the rule checks declaration presence, not whether the
+selected scopes are sufficient or minimal. It emits one workflow-level
+finding, even when multiple jobs inherit defaults.
+
+### SEC003 — Third-Party Action Not Pinned to Commit SHA
+
+- Severity: high.
+- Detects mutable `uses:` references in mapping-shaped workflow steps.
+- Why it matters: tags and branches can move to different code after review.
+
+Bad:
+
+```yaml
+- uses: actions/checkout@v4
+```
+
+Safer:
+
+```yaml
+- uses: actions/checkout@0123456789abcdef0123456789abcdef01234567
+```
+
+Known limitations: official GitHub actions are intentionally not exempt.
+Local `./` actions, `docker://` references, and job-level reusable workflows
+are outside this rule. Action ownership and commit authenticity are not
+verified because ActionDoctor does not access GitHub.
+
+### SEC004 — Untrusted Pull Request Checkout Risk
+
+- Severity: critical.
+- Detects `pull_request_target` workflows where an `actions/checkout` step has
+  an explicit `ref` containing a known pull-request head expression.
+- Why it matters: `pull_request_target` runs in the base repository context;
+  executing checked-out pull-request code there may expose secrets or write
+  permissions.
+
+Bad:
+
+```yaml
+on: pull_request_target
+steps:
+  - uses: actions/checkout@0123456789abcdef0123456789abcdef01234567
+    with:
+      ref: ${{ github.event.pull_request.head.sha }}
+```
+
+Safer:
+
+```yaml
+on: pull_request
+steps:
+  - uses: actions/checkout@0123456789abcdef0123456789abcdef01234567
+```
+
+Known limitations: this rule is intentionally conservative. It recognizes
+specific `head.sha`, `head.ref`, and `github.head_ref` expressions and does
+not claim that a workflow is exploitable. Indirect data flow, later script
+execution, and custom checkout implementations are not analyzed.
+
+### SEC005 — Secret Exposed Through Workflow-Level Environment
+
+- Severity: medium.
+- Detects top-level environment values containing direct `secrets.NAME`
+  references.
+- Why it matters: workflow-level environment variables are broadly available
+  to jobs and steps that may not need the secret.
+
+Bad:
+
+```yaml
+env:
+  TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+```
+
+Safer:
+
+```yaml
+jobs:
+  deploy:
+    steps:
+      - run: ./deploy
+        env:
+          TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+```
+
+Known limitations: bracket-form secret references and shell-script leakage
+are not inspected. Job-level and step-level secret environments are
+deliberately not reported by SEC005.
+
 ### MAINT001 — Missing Workflow Name
 
 - Category: maintainability
@@ -134,5 +275,5 @@ Each rule needs:
 - proof that evaluation does not rely on network or filesystem access.
 
 Engine and registry tests cover ordering, filtering, duplicate/invalid IDs,
-multi-workflow execution, multiple findings, mutation isolation, and exception
-isolation.
+multi-workflow execution, multiple findings, deduplication, mutation
+isolation, and exception isolation.

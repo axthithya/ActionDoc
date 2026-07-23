@@ -149,6 +149,18 @@ def _render_rule_results(result: RuleEngineResult) -> None:
                     f" — {finding.title}",
                 )
             )
+            context: list[str] = []
+            if finding.line is not None:
+                location = f"line {finding.line}"
+                if finding.column is not None:
+                    location += f", column {finding.column}"
+                context.append(location)
+            if finding.job_id is not None:
+                context.append(f"job {finding.job_id}")
+            if finding.yaml_path is not None:
+                context.append(finding.yaml_path)
+            if context:
+                console.print(Text(f"    Location: {'; '.join(context)}"))
             if finding.remediation is not None:
                 console.print(Text(f"    Remediation: {finding.remediation}"))
 

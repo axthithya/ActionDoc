@@ -1,8 +1,9 @@
+name: Docker action
 on: push
 permissions:
   contents: read
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "valid"
+      - uses: docker://alpine:3.20

@@ -1,0 +1,9 @@
+name: Target without checkout
+on: pull_request_target
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "metadata only"

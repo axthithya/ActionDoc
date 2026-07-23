@@ -1,0 +1,14 @@
+name: Per-job permissions
+on: push
+jobs:
+  first:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "first"
+  second:
+    permissions: {}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "second"

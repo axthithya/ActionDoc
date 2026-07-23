@@ -8,6 +8,13 @@ from actiondoctor.models.finding import RULE_ID_PATTERN
 from actiondoctor.rules.base import Rule
 from actiondoctor.rules.maintainability import MissingWorkflowNameRule
 from actiondoctor.rules.reliability import MissingJobsRule
+from actiondoctor.rules.security import (
+    BroadPermissionsRule,
+    MissingExplicitPermissionsRule,
+    PullRequestTargetCheckoutRule,
+    UnpinnedActionRule,
+    WorkflowSecretEnvironmentRule,
+)
 
 CATEGORY_PREFIXES = {
     RuleCategory.SECURITY: "SEC",
@@ -86,6 +93,11 @@ class RuleRegistry:
 
 
 DEFAULT_RULES: tuple[Rule, ...] = (
+    BroadPermissionsRule(),
+    MissingExplicitPermissionsRule(),
+    UnpinnedActionRule(),
+    PullRequestTargetCheckoutRule(),
+    WorkflowSecretEnvironmentRule(),
     MissingWorkflowNameRule(),
     MissingJobsRule(),
 )

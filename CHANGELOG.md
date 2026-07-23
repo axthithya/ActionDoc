@@ -22,3 +22,8 @@ and this project intends to follow
 - `MAINT001` missing-workflow-name demonstration rule.
 - `REL001` missing-jobs demonstration rule.
 - Finding summaries with a temporary high-severity CLI failure threshold.
+- Initial security pack covering broad/missing permissions, mutable action
+  references, risky `pull_request_target` checkout, and workflow-level secret
+  environments.
+- Practical line, column, job, and YAML-path context for step-level findings.
+- Engine-level finding deduplication by rule and YAML location.
