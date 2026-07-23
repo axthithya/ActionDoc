@@ -3,6 +3,11 @@
 from actiondoctor.models.enums import RuleCategory, ScanStatus, Severity
 from actiondoctor.models.finding import Finding
 from actiondoctor.models.result import ScanResult
+from actiondoctor.models.workflow import (
+    WorkflowFile,
+    WorkflowLoadResult,
+    WorkflowParseError,
+)
 
 __all__ = [
     "Finding",
@@ -10,4 +15,7 @@ __all__ = [
     "ScanResult",
     "ScanStatus",
     "Severity",
+    "WorkflowFile",
+    "WorkflowLoadResult",
+    "WorkflowParseError",
 ]

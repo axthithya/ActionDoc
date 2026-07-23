@@ -58,6 +58,11 @@ consistent development tooling.
 
 ## Phase 2: Workflow discovery and parsing
 
+**Status: Complete (2026-07-23).** All phase acceptance criteria pass,
+including deterministic discovery, safe UTF-8 loading, YAML 1.2 parsing,
+structured partial failures, source locations, CLI exit behavior, and offline
+tests.
+
 ### Goal
 
 Reliably discover, load, and parse GitHub Actions workflows while retaining

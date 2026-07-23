@@ -14,3 +14,6 @@ and this project intends to follow
 - Typer CLI with version and placeholder scan commands.
 - Typed Pydantic models for findings and scan results.
 - Ruff, mypy, pytest, and GitHub Actions CI configuration.
+- Deterministic discovery of `.yml` and `.yaml` GitHub Actions workflows.
+- Safe YAML 1.2 parsing with structured, source-aware errors.
+- Repository scan summaries and documented parse-related exit codes.

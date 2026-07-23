@@ -1,11 +1,14 @@
 """Tests for the foundation CLI."""
 
+from pathlib import Path
+
 from typer.testing import CliRunner
 
 from actiondoctor import __version__
 from actiondoctor.cli import app
 
 runner = CliRunner()
+FIXTURES = Path(__file__).parents[1] / "fixtures" / "repositories"
 
 
 def test_help() -> None:
@@ -26,13 +29,17 @@ def test_version() -> None:
     assert result.stdout.strip() == __version__
 
 
-def test_scan_placeholder() -> None:
-    """The placeholder scan is explicit and successful."""
-    result = runner.invoke(app, ["scan"])
+def test_scan_valid_repository() -> None:
+    """A valid repository prints counts and exits successfully."""
+    result = runner.invoke(app, ["scan", str(FIXTURES / "multiple")])
 
     assert result.exit_code == 0
-    assert "scanner foundation is ready" in result.stdout
-    assert "Workflow analysis is not implemented yet." in result.stdout
+    assert "ActionDoctor Scan" in result.stdout
+    assert "Workflow files discovered: 2" in result.stdout
+    assert "Successfully parsed: 2" in result.stdout
+    assert "Failed to parse: 0" in result.stdout
+    assert ".github/workflows/a-ci.yml" in result.stdout
+    assert ".github/workflows/z-release.yaml" in result.stdout
 
 
 def test_scan_help() -> None:
@@ -40,4 +47,44 @@ def test_scan_help() -> None:
     result = runner.invoke(app, ["scan", "--help"])
 
     assert result.exit_code == 0
-    assert "Show the scanner foundation status." in result.stdout
+    assert "Discover and parse GitHub Actions workflow files." in result.stdout
+
+
+def test_scan_mixed_repository_returns_one() -> None:
+    """Any parse failure produces exit code one after showing partial success."""
+    result = runner.invoke(app, ["scan", str(FIXTURES / "mixed")])
+
+    assert result.exit_code == 1
+    assert "Workflow files discovered: 2" in result.stdout
+    assert "Successfully parsed: 1" in result.stdout
+    assert "Failed to parse: 1" in result.stdout
+    assert "good.yaml" in result.stdout
+    assert "broken.yml" in result.stdout
+    assert "Invalid YAML:" in result.stdout
+    assert "line" in result.stdout
+    assert "column" in result.stdout
+
+
+def test_scan_missing_workflow_directory_returns_zero() -> None:
+    """A repository with no workflow directory is a successful empty scan."""
+    result = runner.invoke(app, ["scan", str(FIXTURES / "missing_workflows")])
+
+    assert result.exit_code == 0
+    assert "Workflow files discovered: 0" in result.stdout
+    assert "No .github/workflows directory was found." in result.stdout
+
+
+def test_scan_empty_workflow_directory_returns_zero() -> None:
+    """A workflow directory with no YAML files is a successful empty scan."""
+    result = runner.invoke(app, ["scan", str(FIXTURES / "empty_workflows")])
+
+    assert result.exit_code == 0
+    assert "contains no .yml or .yaml files" in result.stdout
+
+
+def test_scan_invalid_repository_returns_two(tmp_path: Path) -> None:
+    """An invalid repository path uses the documented application error code."""
+    result = runner.invoke(app, ["scan", str(tmp_path / "missing")])
+
+    assert result.exit_code == 2
+    assert "Repository path does not exist" in result.stdout

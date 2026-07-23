@@ -11,6 +11,8 @@ from actiondoctor.models import (
     ScanResult,
     ScanStatus,
     Severity,
+    WorkflowFile,
+    WorkflowLoadResult,
 )
 
 
@@ -75,3 +77,25 @@ def test_scan_result_rejects_score_outside_bounds(health_score: int) -> None:
     """Health scores are always between zero and one hundred."""
     with pytest.raises(ValidationError):
         ScanResult(health_score=health_score)
+
+
+def test_workflow_load_result_is_serializable(tmp_path: Path) -> None:
+    """Workflow boundary models support machine serialization."""
+    workflow = WorkflowFile(
+        path=tmp_path / "ci.yml",
+        relative_path=".github/workflows/ci.yml",
+        raw_text="name: CI\n",
+        parsed_content={"name": "CI", "on": "push"},
+    )
+    result = WorkflowLoadResult(
+        repository_path=tmp_path,
+        workflow_directory=tmp_path / ".github" / "workflows",
+        workflow_directory_exists=True,
+        workflows=[workflow],
+        discovered_file_count=1,
+    )
+
+    serialized = result.model_dump(mode="json")
+
+    assert serialized["discovered_file_count"] == 1
+    assert serialized["workflows"][0]["relative_path"] == (".github/workflows/ci.yml")

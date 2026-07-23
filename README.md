@@ -3,9 +3,8 @@
 ActionDoctor is an open-source, offline CLI for finding security, reliability,
 cost, and maintainability problems in GitHub Actions workflows.
 
-The project is currently at the foundation stage. The CLI and domain models
-are available, but workflow discovery, parsing, and analysis are not
-implemented yet.
+The CLI currently discovers and validates workflow YAML. Analysis rules and
+the final health score are planned but are not implemented yet.
 
 ## Requirements
 
@@ -43,14 +42,64 @@ Try the CLI:
 actiondoctor --help
 actiondoctor version
 actiondoctor scan --help
+actiondoctor scan .
 python -m actiondoctor --help
 ```
 
-The placeholder scan currently reports:
+## Scanning workflows
+
+Pass the repository root to `scan`:
+
+```bash
+actiondoctor scan /path/to/repository
+```
+
+When omitted, the repository defaults to the current directory:
+
+```bash
+actiondoctor scan
+```
+
+ActionDoctor looks directly inside:
 
 ```text
-ActionDoctor scanner foundation is ready. Workflow analysis is not implemented yet.
+.github/workflows/
 ```
+
+Both `.yml` and `.yaml` files are supported. Files are parsed in deterministic
+filename order. Directories, symlinks, nested files, and other extensions are
+ignored.
+
+Example output:
+
+```text
+ActionDoctor Scan
+
+Repository: /path/to/repository
+Workflow files discovered: 3
+Successfully parsed: 2
+Failed to parse: 1
+
+✓ .github/workflows/ci.yml
+✗ .github/workflows/broken.yml — Invalid YAML: expected ',' or ']' at line 8, column 4
+✓ .github/workflows/release.yaml
+```
+
+Exit code `0` means all discovered workflows parsed successfully. Exit code
+`1` means at least one workflow could not be read or parsed. Exit code `2`
+means the repository path was invalid or an unexpected application error
+occurred. A missing or empty workflow directory is a successful empty scan
+with exit code `0` and an explanatory message.
+
+## Current limitations
+
+- Workflow files are parsed but not analyzed for security, reliability, cost,
+  or maintainability issues.
+- The health score remains a placeholder and is not shown by `scan`.
+- JSON, Markdown, and SARIF reports are not available.
+- Only workflow files directly inside `.github/workflows/` are discovered,
+  matching GitHub Actions' workflow location.
+- Individual workflow files are limited to 1,000,000 bytes.
 
 ## Development checks
 
