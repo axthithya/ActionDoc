@@ -24,7 +24,7 @@ and database dependencies.
 ## Design principles
 
 1. **A small pipeline, not a framework.** Keep discovery, parsing, analysis,
-   scoring, and presentation separate, but avoid dependency-injection
+   scoring, and presentation separate, but avoid dependency-injection.
    containers, event buses, or elaborate plugin systems.
 2. **Rules do not perform I/O.** A rule receives parsed workflow data and
    returns findings. This makes rules deterministic and easy to unit test.

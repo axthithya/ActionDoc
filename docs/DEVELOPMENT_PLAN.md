@@ -23,7 +23,7 @@ consistent development tooling.
 - Declare development dependencies: pytest, Ruff, and mypy.
 - Add `actiondoctor` and `python -m actiondoctor` entry points.
 - Implement only `version` and a placeholder/helpful `scan` command.
-- Configure Ruff, mypy, and pytest in `pyproject.toml`.
+- Configure Ruff, mypy, and pytest in `pyproject.toml`..
 - Add README, license, changelog, contribution guidance, and a minimal CI
   workflow.
 - Establish supported Python versions and a release version source.
