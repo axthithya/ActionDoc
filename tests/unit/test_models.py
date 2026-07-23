@@ -34,7 +34,10 @@ def test_finding_accepts_valid_data() -> None:
     assert finding.line == 12
 
 
-@pytest.mark.parametrize("rule_id", ["SEC1", "sec001", "OTHER001", "COST0001"])
+@pytest.mark.parametrize(
+    "rule_id",
+    ["SEC1", "sec001", "OTHER001", "COST0001", "SEC000"],
+)
 def test_finding_rejects_invalid_rule_ids(rule_id: str) -> None:
     """Rule IDs must follow the documented category convention."""
     with pytest.raises(ValidationError):
@@ -99,3 +102,26 @@ def test_workflow_load_result_is_serializable(tmp_path: Path) -> None:
 
     assert serialized["discovered_file_count"] == 1
     assert serialized["workflows"][0]["relative_path"] == (".github/workflows/ci.yml")
+
+
+def test_finding_supports_rule_context_fields() -> None:
+    """Current rule output can include precise workflow context and guidance."""
+    finding = Finding(
+        rule_id="REL001",
+        title="Missing Jobs",
+        description="No jobs were defined.",
+        severity=Severity.HIGH,
+        category=RuleCategory.RELIABILITY,
+        file_path=Path(".github/workflows/ci.yml"),
+        line=4,
+        column=2,
+        job_id="build",
+        yaml_path="jobs.build",
+        remediation="Add a job.",
+        documentation_url="https://example.com/rules/REL001",
+    )
+
+    assert finding.column == 2
+    assert finding.job_id == "build"
+    assert finding.yaml_path == "jobs.build"
+    assert finding.documentation_url.endswith("REL001")

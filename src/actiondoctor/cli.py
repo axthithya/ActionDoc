@@ -8,8 +8,12 @@ from rich.console import Console
 from rich.text import Text
 
 from actiondoctor import __version__
-from actiondoctor.models import WorkflowLoadResult
+from actiondoctor.engine import RuleEngine
+from actiondoctor.models import RuleEngineResult, Severity, WorkflowLoadResult
 from actiondoctor.parser import InvalidRepositoryError, WorkflowLoader
+from actiondoctor.registry import DEFAULT_REGISTRY
+
+FAILURE_SEVERITIES = frozenset({Severity.HIGH, Severity.CRITICAL})
 
 app = typer.Typer(
     help="Audit GitHub Actions workflows.",
@@ -37,7 +41,8 @@ def scan(
     """Discover and parse GitHub Actions workflow files."""
     try:
         result = WorkflowLoader().load_repository(repository)
-        _render_scan_result(result)
+        rule_result = RuleEngine().run(result.workflows, DEFAULT_REGISTRY.rules)
+        _render_scan_result(result, rule_result)
     except InvalidRepositoryError as error:
         console.print(Text(f"Error: {error}", style="bold red"))
         raise typer.Exit(code=2) from error
@@ -45,12 +50,18 @@ def scan(
         console.print(Text(f"Unexpected error: {error}", style="bold red"))
         raise typer.Exit(code=2) from error
 
-    if result.parse_errors:
+    threshold_reached = any(
+        finding.severity in FAILURE_SEVERITIES for finding in rule_result.findings
+    )
+    if result.parse_errors or rule_result.execution_errors or threshold_reached:
         raise typer.Exit(code=1)
 
 
-def _render_scan_result(result: WorkflowLoadResult) -> None:
-    """Render the phase-two terminal scan summary."""
+def _render_scan_result(
+    result: WorkflowLoadResult,
+    rule_result: RuleEngineResult,
+) -> None:
+    """Render the parsing and rule-engine terminal summary."""
     console.print()
     console.print("[bold]ActionDoctor Scan[/bold]")
     console.print()
@@ -58,17 +69,22 @@ def _render_scan_result(result: WorkflowLoadResult) -> None:
     console.print(f"Workflow files discovered: {result.discovered_file_count}")
     console.print(f"Successfully parsed: {result.successful_count}")
     console.print(f"Failed to parse: {result.failed_count}")
+    console.print(f"Total rules executed: {rule_result.rules_executed}")
+    console.print(f"Total findings: {len(rule_result.findings)}")
+    console.print(f"Rule execution failures: {len(rule_result.execution_errors)}")
     console.print()
 
     if not result.workflow_directory_exists:
         console.print(
             "No .github/workflows directory was found. There are no workflows to parse."
         )
+        _render_rule_results(rule_result)
         return
     if result.discovered_file_count == 0:
         console.print(
             "The .github/workflows directory contains no .yml or .yaml files."
         )
+        _render_rule_results(rule_result)
         return
 
     entries: list[tuple[Path, Text]] = []
@@ -109,6 +125,43 @@ def _render_scan_result(result: WorkflowLoadResult) -> None:
         ),
     ):
         console.print(line)
+
+    _render_rule_results(rule_result)
+
+
+def _render_rule_results(result: RuleEngineResult) -> None:
+    """Render findings grouped by their portable workflow path."""
+    if result.findings:
+        console.print()
+        console.print("[bold]Findings[/bold]")
+        current_path: str | None = None
+        for finding in result.findings:
+            workflow_path = finding.file_path.as_posix()
+            if workflow_path != current_path:
+                console.print()
+                console.print(Text(workflow_path, style="bold"))
+                current_path = workflow_path
+            console.print(
+                Text.assemble(
+                    "  ",
+                    (f"[{finding.severity.value.upper()}] ", "yellow"),
+                    (finding.rule_id, "cyan"),
+                    f" — {finding.title}",
+                )
+            )
+            if finding.remediation is not None:
+                console.print(Text(f"    Remediation: {finding.remediation}"))
+
+    if result.execution_errors:
+        console.print()
+        console.print("[bold red]Rule execution failures[/bold red]")
+        for error in result.execution_errors:
+            console.print(
+                Text(
+                    f"  {error.workflow_path}: {error.rule_id} "
+                    f"failed with {error.error_type} — {error.error_message}"
+                )
+            )
 
 
 def _terminal_marker(preferred: str, fallback: str) -> str:

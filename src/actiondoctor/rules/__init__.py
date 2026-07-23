@@ -1,1 +1,5 @@
-"""Rule implementations will be added in the rule-engine phase."""
+"""Rule contracts and built-in rules."""
+
+from actiondoctor.rules.base import Rule
+
+__all__ = ["Rule"]

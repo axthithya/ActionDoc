@@ -17,3 +17,8 @@ and this project intends to follow
 - Deterministic discovery of `.yml` and `.yaml` GitHub Actions workflows.
 - Safe YAML 1.2 parsing with structured, source-aware errors.
 - Repository scan summaries and documented parse-related exit codes.
+- Typed, side-effect-isolated rule protocol and deterministic rule engine.
+- Explicit rule registry with strict ID and metadata validation.
+- `MAINT001` missing-workflow-name demonstration rule.
+- `REL001` missing-jobs demonstration rule.
+- Finding summaries with a temporary high-severity CLI failure threshold.

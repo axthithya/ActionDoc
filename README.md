@@ -3,8 +3,9 @@
 ActionDoctor is an open-source, offline CLI for finding security, reliability,
 cost, and maintainability problems in GitHub Actions workflows.
 
-The CLI currently discovers and validates workflow YAML. Analysis rules and
-the final health score are planned but are not implemented yet.
+The CLI currently discovers and validates workflow YAML, then runs two
+demonstration rules through a reusable rule engine. The full rule catalog and
+final health score are planned but are not implemented yet.
 
 ## Requirements
 
@@ -79,22 +80,41 @@ Repository: /path/to/repository
 Workflow files discovered: 3
 Successfully parsed: 2
 Failed to parse: 1
+Total rules executed: 4
+Total findings: 1
+Rule execution failures: 0
 
 ✓ .github/workflows/ci.yml
 ✗ .github/workflows/broken.yml — Invalid YAML: expected ',' or ']' at line 8, column 4
 ✓ .github/workflows/release.yaml
+
+Findings
+
+.github/workflows/release.yaml
+  [LOW] MAINT001 — Missing Workflow Name
+    Remediation: Add a descriptive top-level `name` to the workflow.
 ```
 
-Exit code `0` means all discovered workflows parsed successfully. Exit code
-`1` means at least one workflow could not be read or parsed. Exit code `2`
+Exit code `0` means the scan completed without a configured failure condition.
+Exit code `1` means a workflow could not be parsed, a rule failed
+unexpectedly, or a finding reached the temporary `high` severity threshold.
+Low-severity findings are displayed but do not fail the scan. Exit code `2`
 means the repository path was invalid or an unexpected application error
 occurred. A missing or empty workflow directory is a successful empty scan
 with exit code `0` and an explanatory message.
 
+## Current demonstration rules
+
+- `MAINT001` — Missing Workflow Name (`low`)
+- `REL001` — Missing Jobs (`high`)
+
+See [Rule documentation](docs/RULES.md) for behavior, ordering, registry
+validation, and contributor instructions.
+
 ## Current limitations
 
-- Workflow files are parsed but not analyzed for security, reliability, cost,
-  or maintainability issues.
+- Only two demonstration rules are currently available; this is not yet the
+  complete security, reliability, cost, and maintainability catalog.
 - The health score remains a placeholder and is not shown by `scan`.
 - JSON, Markdown, and SARIF reports are not available.
 - Only workflow files directly inside `.github/workflows/` are discovered,

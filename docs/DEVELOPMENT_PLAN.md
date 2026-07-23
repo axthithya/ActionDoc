@@ -116,6 +116,12 @@ source locations for later rule findings.
 
 ## Phase 3: Rule engine
 
+**Status: Complete (2026-07-23).** The typed rule protocol, explicit validated
+registry, deterministic failure-isolating engine, safe execution diagnostics,
+two demonstration rules, CLI integration, and offline tests are complete.
+Configuration and severity overrides remain deferred as required by this
+phase's implementation scope.
+
 ### Goal
 
 Provide a small, reusable contract for selecting and executing independent
