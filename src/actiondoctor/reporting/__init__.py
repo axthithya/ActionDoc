@@ -1,1 +1,5 @@
-"""Report generation will be added in the CLI-reporting phase."""
+"""Report generation package."""
+
+from actiondoctor.reporting.terminal import TerminalReporter
+
+__all__ = ["TerminalReporter"]

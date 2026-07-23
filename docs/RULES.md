@@ -388,8 +388,8 @@ False-positive considerations: non-empty strings and other non-null scalar
 values retain the existing accepted behavior.
 
 Known limitations: the rule checks presence, not whether a name is unique,
-accurate, or follows project terminology. It does not fail a scan under the
-current high-severity threshold.
+accurate, or follows project terminology. With the default `--fail-on high`
+policy, this low finding does not fail a scan.
 
 ### MAINT002 — Missing Job Name
 
@@ -591,8 +591,8 @@ False-positive considerations: any non-empty jobs mapping is accepted; job
 schema validation belongs to focused rules and GitHub's workflow validator.
 
 Known limitations: REL001 does not determine whether jobs can execute or
-whether their dependencies and conditions are reachable. It reaches the
-temporary high-severity CLI threshold and makes the scan return exit code 1.
+whether their dependencies and conditions are reachable. Its high finding
+makes a scan fail with the default `--fail-on high` policy.
 
 ### REL002 — Missing Job Timeout
 
@@ -730,8 +730,8 @@ once.
 
 Known limitations: `continue-on-error` can be intentional for experimental or
 advisory work. The rule does not claim every use is wrong; remediation asks
-maintainers to confirm intent and keep the ignored failure visible. Only a
-job-level high finding reaches the current CLI failure threshold.
+maintainers to confirm intent and keep the ignored failure visible. With the
+default `--fail-on high` policy, only a job-level high finding fails the scan.
 
 ### REL006 — Service Container Without Health Check
 

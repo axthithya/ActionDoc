@@ -246,6 +246,10 @@ A registry-wide test must enforce ID uniqueness, format, and category prefix.
 
 ## Phase 5: CLI reporting
 
+**Status:** In progress. Health scoring, the dedicated Rich terminal reporter,
+score completeness, `--fail-on`, and `--no-color` are complete. The planned
+`rules` command, configuration layer, and filters remain future work.
+
 ### Goal
 
 Connect the analysis pipeline to a polished Rich terminal experience and

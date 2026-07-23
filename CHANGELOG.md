@@ -42,3 +42,8 @@ and this project intends to follow
   preserving `MAINT001`.
 - Shared typed job/step traversal and focused maintainability normalization and
   counting helpers.
+- Deterministic 0-100 health scoring with documented severity weights, a
+  20-point per-rule cap, ratings, breakdowns, and incomplete-scan state.
+- Dedicated Rich terminal audit reporting with grouped finding details,
+  category/severity summaries, and separate parse and rule execution errors.
+- Configurable `--fail-on` thresholds and `--no-color` terminal output.

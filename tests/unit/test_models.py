@@ -10,6 +10,7 @@ from actiondoctor.models import (
     RuleCategory,
     ScanResult,
     ScanStatus,
+    ScoreResult,
     Severity,
     WorkflowFile,
     WorkflowLoadResult,
@@ -76,10 +77,20 @@ def test_scan_result_defaults_to_clean_success() -> None:
 
 
 @pytest.mark.parametrize("health_score", [-1, 101])
-def test_scan_result_rejects_score_outside_bounds(health_score: int) -> None:
+def test_score_result_rejects_score_outside_bounds(health_score: int) -> None:
     """Health scores are always between zero and one hundred."""
     with pytest.raises(ValidationError):
-        ScanResult(health_score=health_score)
+        ScoreResult(
+            raw_penalty=0,
+            capped_penalty=0,
+            final_score=health_score,
+            rating="Excellent",
+            penalty_by_severity={},
+            penalty_by_rule_id={},
+            finding_count_by_severity={},
+            finding_count_by_category={},
+            completeness="complete",
+        )
 
 
 def test_workflow_load_result_is_serializable(tmp_path: Path) -> None:

@@ -6,6 +6,7 @@ from typer.testing import CliRunner
 
 from actiondoctor import __version__
 from actiondoctor.cli import app
+from actiondoctor.models import RuleEngineResult, RuleExecutionError
 
 runner = CliRunner()
 FIXTURES = Path(__file__).parents[1] / "fixtures" / "repositories"
@@ -34,7 +35,8 @@ def test_scan_valid_repository() -> None:
     result = runner.invoke(app, ["scan", str(FIXTURES / "multiple")])
 
     assert result.exit_code == 0
-    assert "ActionDoctor Scan" in result.stdout
+    assert "ActionDoc" in result.stdout
+    assert "GitHub Actions Workflow Audit" in result.stdout
     assert "Workflow files discovered: 2" in result.stdout
     assert "Successfully parsed: 2" in result.stdout
     assert "Failed to parse: 0" in result.stdout
@@ -49,7 +51,16 @@ def test_scan_help() -> None:
     result = runner.invoke(app, ["scan", "--help"])
 
     assert result.exit_code == 0
-    assert "Discover and parse GitHub Actions workflow files." in result.stdout
+    assert "Discover, parse, and audit GitHub Actions workflow files." in result.stdout
+
+
+def test_scan_help_documents_reporting_options() -> None:
+    """Scan help exposes failure policy and plain-output controls."""
+    result = runner.invoke(app, ["scan", "--help"])
+
+    assert result.exit_code == 0
+    assert "--fail-on" in result.stdout
+    assert "--no-color" in result.stdout
 
 
 def test_scan_mixed_repository_returns_one() -> None:
@@ -211,3 +222,116 @@ def test_maintainability_findings_display_without_failing_scan() -> None:
     assert "[LOW] MAINT003" in result.stdout
     assert "[LOW] MAINT005" in result.stdout
     assert "jobs.test.steps[0].name" in result.stdout
+
+
+def test_critical_threshold_ignores_high_finding() -> None:
+    """A critical threshold does not fail for a high-only repository."""
+    result = runner.invoke(
+        app,
+        ["scan", str(FIXTURES / "rules_high"), "--fail-on", "critical"],
+    )
+
+    assert result.exit_code == 0
+
+
+def test_medium_threshold_fails_for_cost_finding() -> None:
+    """A medium threshold fails when a medium cost finding is present."""
+    result = runner.invoke(
+        app,
+        ["scan", str(FIXTURES / "cost_findings"), "--fail-on", "medium"],
+    )
+
+    assert result.exit_code == 1
+
+
+def test_low_threshold_fails_for_maintainability_finding() -> None:
+    """A low threshold includes low-severity findings."""
+    result = runner.invoke(
+        app,
+        ["scan", str(FIXTURES / "rules_low"), "--fail-on", "low"],
+    )
+
+    assert result.exit_code == 1
+
+
+def test_never_threshold_ignores_findings() -> None:
+    """Never disables finding-based failure without hiding findings."""
+    result = runner.invoke(
+        app,
+        ["scan", str(FIXTURES / "security_findings"), "--fail-on", "never"],
+    )
+
+    assert result.exit_code == 0
+    assert "SEC001" in result.stdout
+
+
+def test_never_threshold_does_not_ignore_parse_errors() -> None:
+    """Analysis errors fail independently of the finding threshold."""
+    result = runner.invoke(
+        app,
+        ["scan", str(FIXTURES / "mixed"), "--fail-on", "never"],
+    )
+
+    assert result.exit_code == 1
+    assert "Status" in result.stdout
+    assert "Incomplete" in result.stdout
+
+
+def test_never_threshold_does_not_ignore_rule_errors(monkeypatch: object) -> None:
+    """An isolated rule crash fails even when findings never fail."""
+
+    def failed_run(*_args: object, **_kwargs: object) -> RuleEngineResult:
+        return RuleEngineResult(
+            findings=[],
+            execution_errors=[
+                RuleExecutionError(
+                    rule_id="REL001",
+                    workflow_path=".github/workflows/a-ci.yml",
+                    error_type="RuntimeError",
+                    error_message="test failure",
+                )
+            ],
+            rules_executed=22,
+        )
+
+    monkeypatch.setattr("actiondoctor.cli.RuleEngine.run", failed_run)  # type: ignore[attr-defined]
+    result = runner.invoke(
+        app,
+        ["scan", str(FIXTURES / "multiple"), "--fail-on", "never"],
+    )
+
+    assert result.exit_code == 1
+    assert "Rule execution errors" in result.stdout
+    assert "Incomplete" in result.stdout
+
+
+def test_invalid_failure_threshold_is_a_usage_error() -> None:
+    """Typer rejects unsupported threshold values with exit code two."""
+    result = runner.invoke(
+        app,
+        ["scan", str(FIXTURES / "multiple"), "--fail-on", "info"],
+    )
+
+    assert result.exit_code == 2
+
+
+def test_no_color_output_contains_no_ansi_sequences() -> None:
+    """Plain terminal mode is safe for logs and unsupported terminals."""
+    result = runner.invoke(
+        app,
+        ["scan", str(FIXTURES / "rules_low"), "--no-color"],
+    )
+
+    assert result.exit_code == 0
+    assert "\x1b[" not in result.stdout
+
+
+def test_scan_displays_score_rating_and_breakdowns() -> None:
+    """The CLI explains the score alongside category and severity counts."""
+    result = runner.invoke(app, ["scan", str(FIXTURES / "rules_both")])
+
+    assert "Health score" in result.stdout
+    assert "89/100" in result.stdout
+    assert "Health rating" in result.stdout
+    assert "reliability: 1" in result.stdout
+    assert "high: 1" in result.stdout

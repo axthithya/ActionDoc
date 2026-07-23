@@ -164,8 +164,8 @@ does not depend on numeric enum values:
 | Severity | Rank | Initial score weight |
 |----------|-----:|---------------------:|
 | info | 0 | 0 |
-| low | 1 | 2 |
-| medium | 2 | 5 |
+| low | 1 | 1 |
+| medium | 2 | 4 |
 | high | 3 | 10 |
 | critical | 4 | 20 |
 
@@ -375,19 +375,18 @@ shows a need.
 or stateless service. The initial policy is intentionally explainable:
 
 ```text
-raw penalty = sum(weight(finding.severity) for each finding)
-score = max(0, 100 - raw penalty)
+raw rule penalty = sum(weight(finding.severity) for findings of one rule ID)
+capped rule penalty = min(raw rule penalty, 20)
+score = max(0, 100 - sum(capped rule penalties))
 ```
 
 An `info` finding contributes no penalty. Each non-info finding contributes
-its severity weight. No hidden file-count normalization or category multiplier
-is applied in the first version.
+its severity weight, with a 20-point cap per rule ID. No hidden file-count
+normalization or category multiplier is applied.
 
-This simple model has known tradeoffs: large repositories can accumulate more
-penalties, and repeated instances of one rule can dominate the score. Before
-declaring the score stable for a 1.0 release, evaluate alternatives such as
-per-rule caps or diminishing penalties against representative repositories.
-Whatever policy is selected must:
+This model limits repetition of a single rule while allowing distinct problem
+types to accumulate. Before a 1.0 release, evaluate the policy against
+representative repositories. The policy must:
 
 - always produce an integer in `[0, 100]`;
 - be deterministic and order-independent;

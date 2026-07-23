@@ -5,8 +5,8 @@ cost, and maintainability problems in GitHub Actions workflows.
 
 The CLI currently discovers and validates workflow YAML, then runs five
 security rules, five cost-efficiency rules, six reliability rules, and six
-maintainability rules through a reusable rule engine. The final health score is
-planned but is not implemented yet.
+maintainability rules through a reusable rule engine. It reports an explainable
+health score from 0 to 100 with severity and category breakdowns.
 
 ## Requirements
 
@@ -54,6 +54,8 @@ Pass the repository root to `scan`:
 
 ```bash
 actiondoctor scan /path/to/repository
+actiondoctor scan /path/to/repository --fail-on medium
+actiondoctor scan /path/to/repository --no-color
 ```
 
 When omitted, the repository defaults to the current directory:
@@ -75,7 +77,8 @@ ignored.
 Example output:
 
 ```text
-ActionDoctor Scan
+ActionDoc
+GitHub Actions Workflow Audit
 
 Repository: /path/to/repository
 Workflow files discovered: 3
@@ -84,22 +87,31 @@ Failed to parse: 1
 Total rules executed: 44
 Total findings: 1
 Rule execution failures: 0
+Health score: 99/100
+Health rating: Excellent
+Status: Incomplete - 1 analysis error
 
-✓ .github/workflows/ci.yml
-✗ .github/workflows/broken.yml — Invalid YAML: expected ',' or ']' at line 8, column 4
-✓ .github/workflows/release.yaml
+Parsed workflows
+  [OK] .github/workflows/ci.yml
+  [OK] .github/workflows/release.yaml
 
 Findings
 
 .github/workflows/release.yaml
-  [LOW] MAINT001 — Missing Workflow Name
+  [LOW] MAINT001 - Missing Workflow Name
+    Description: The workflow should define a non-empty top-level name.
     Remediation: Add a descriptive top-level `name` to the workflow.
+
+Workflow parse errors
+  .github/workflows/broken.yml - Invalid YAML at line 8, column 4
 ```
 
 Exit code `0` means the scan completed without a configured failure condition.
 Exit code `1` means a workflow could not be parsed, a rule failed
-unexpectedly, or a finding reached the temporary `high` severity threshold.
-Low-severity findings are displayed but do not fail the scan. Exit code `2`
+unexpectedly, or a finding reached the `--fail-on` severity threshold. The
+threshold defaults to `high`; choose `critical`, `high`, `medium`, `low`, or
+`never`. `never` disables finding-based failure but not parse or rule errors.
+Exit code `2`
 means the repository path was invalid or an unexpected application error
 occurred. A missing or empty workflow directory is a successful empty scan
 with exit code `0` and an explanatory message.
@@ -143,7 +155,6 @@ validation, and contributor instructions.
   not guarantee that a workflow will or will not fail.
 - Maintainability findings identify structures that may be harder to review;
   they do not imply that every reported structure must be changed.
-- The health score remains a placeholder and is not shown by `scan`.
 - JSON, Markdown, and SARIF reports are not available.
 - Only workflow files directly inside `.github/workflows/` are discovered,
   matching GitHub Actions' workflow location.
@@ -165,7 +176,9 @@ configuration, understands the `src` package layout directly, and lets the
 package's `__version__` remain the single source of version metadata.
 
 See [the architecture](docs/ARCHITECTURE.md) and
-[the development plan](docs/DEVELOPMENT_PLAN.md) for the intended roadmap.
+[the development plan](docs/DEVELOPMENT_PLAN.md) for the intended roadmap. The
+[scoring policy](docs/SCORING.md) documents every weight, cap, rating, and
+completeness rule.
 
 ## License
 

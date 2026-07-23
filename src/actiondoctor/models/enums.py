@@ -28,3 +28,29 @@ class ScanStatus(StrEnum):
     SUCCESS = "success"
     PARTIAL = "partial"
     FAILED = "failed"
+
+
+class HealthRating(StrEnum):
+    """Human-readable interpretation of a numeric health score."""
+
+    EXCELLENT = "Excellent"
+    GOOD = "Good"
+    NEEDS_ATTENTION = "Needs attention"
+    POOR = "Poor"
+
+
+class ScanCompleteness(StrEnum):
+    """Whether every discovered workflow and rule evaluation succeeded."""
+
+    COMPLETE = "complete"
+    INCOMPLETE = "incomplete"
+
+
+class FailureThreshold(StrEnum):
+    """Finding severity that should make a CLI scan fail."""
+
+    CRITICAL = "critical"
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+    NEVER = "never"
