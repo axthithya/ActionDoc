@@ -5,6 +5,7 @@ on:
 permissions: write-all
 jobs:
   build:
+    name: Build
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:

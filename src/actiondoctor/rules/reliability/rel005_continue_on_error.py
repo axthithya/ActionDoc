@@ -3,12 +3,8 @@
 from pathlib import Path
 
 from actiondoctor.models import Finding, RuleCategory, Severity, WorkflowFile
-from actiondoctor.rules.reliability.helpers import (
-    is_literal_true,
-    iter_jobs,
-    iter_steps,
-    location_fields,
-)
+from actiondoctor.rules.reliability.helpers import is_literal_true
+from actiondoctor.rules.traversal import iter_jobs, iter_steps, location_fields
 
 
 class ContinueOnErrorRule:

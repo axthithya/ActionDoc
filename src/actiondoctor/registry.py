@@ -13,7 +13,14 @@ from actiondoctor.rules.cost import (
     MissingPythonCacheRule,
     UnrestrictedPushRule,
 )
-from actiondoctor.rules.maintainability import MissingWorkflowNameRule
+from actiondoctor.rules.maintainability import (
+    DuplicateStepNameRule,
+    LongInlineShellScriptRule,
+    MissingJobNameRule,
+    MissingWorkflowNameRule,
+    OversizedJobRule,
+    UnnamedRunStepRule,
+)
 from actiondoctor.rules.reliability import (
     ContinueOnErrorRule,
     MissingJobsRule,
@@ -118,6 +125,11 @@ DEFAULT_RULES: tuple[Rule, ...] = (
     PullRequestTargetCheckoutRule(),
     WorkflowSecretEnvironmentRule(),
     MissingWorkflowNameRule(),
+    MissingJobNameRule(),
+    UnnamedRunStepRule(),
+    OversizedJobRule(),
+    DuplicateStepNameRule(),
+    LongInlineShellScriptRule(),
     MissingJobsRule(),
     MissingJobTimeoutRule(),
     MutableContainerImageRule(),

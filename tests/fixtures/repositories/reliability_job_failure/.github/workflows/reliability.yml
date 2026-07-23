@@ -4,8 +4,10 @@ permissions:
   contents: read
 jobs:
   experimental:
+    name: Experimental
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     continue-on-error: true
     steps:
-      - run: echo experimental
+      - name: Run experiment
+        run: echo experimental

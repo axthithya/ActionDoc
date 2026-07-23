@@ -6,7 +6,9 @@ permissions:
   contents: read
 jobs:
   test:
+    name: Test
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - run: echo "ci"
+      - name: Run CI
+        run: echo "ci"

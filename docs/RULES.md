@@ -364,14 +364,204 @@ deliberately not reported by SEC005.
 
 ### MAINT001 — Missing Workflow Name
 
-- Category: maintainability
-- Severity: low
-- Reports when top-level `name` is absent, null, empty, or whitespace-only.
-- Does not report a non-empty string or another non-null scalar value.
-- Remediation: add a descriptive top-level workflow name.
+- Default severity: low.
+- Detects an absent, null, empty, or whitespace-only top-level workflow name.
+- Why it matters: a descriptive name makes workflow runs easier to identify in
+  the GitHub Actions interface.
 
-Because the temporary CLI failure threshold is `high`, MAINT001 alone does not
-make a scan fail.
+Problematic:
+
+```yaml
+on: push
+jobs: {}
+```
+
+Improved:
+
+```yaml
+name: Pull request checks
+on: pull_request
+jobs: {}
+```
+
+False-positive considerations: non-empty strings and other non-null scalar
+values retain the existing accepted behavior.
+
+Known limitations: the rule checks presence, not whether a name is unique,
+accurate, or follows project terminology. It does not fail a scan under the
+current high-severity threshold.
+
+### MAINT002 — Missing Job Name
+
+- Default severity: low.
+- Detects mapping-shaped ordinary jobs without a non-empty string `name`.
+- Why it matters: descriptive job names make workflow runs and failures easier
+  to understand in the GitHub Actions interface.
+
+Problematic:
+
+```yaml
+jobs:
+  unit-tests:
+    runs-on: ubuntu-24.04
+```
+
+Improved:
+
+```yaml
+jobs:
+  unit-tests:
+    name: Python unit tests
+    runs-on: ubuntu-24.04
+```
+
+False-positive considerations: job-level reusable workflow calls using `uses`,
+malformed job values, and jobs with non-empty string names are ignored.
+
+Known limitations: the rule does not judge whether a supplied name is useful,
+unique, or consistent with other workflows. A terse job ID may already be
+clear to a small team.
+
+### MAINT003 — Unnamed Run Step
+
+- Default severity: low.
+- Detects mapping-shaped steps with scalar `run` content but no non-empty
+  string name.
+- Why it matters: named run steps make logs and failures easier to locate and
+  review.
+
+Problematic:
+
+```yaml
+steps:
+  - run: pytest
+```
+
+Improved:
+
+```yaml
+steps:
+  - name: Run Python tests
+    run: pytest
+```
+
+False-positive considerations: unnamed `uses` steps, malformed step entries,
+non-string `run` values, and named run steps are ignored. Each finding includes
+the job ID and zero-based step index through its YAML path and description.
+
+Known limitations: ActionDoctor does not evaluate whether a supplied step name
+accurately describes its command or whether GitHub's generated label is
+sufficient for a particular workflow.
+
+### MAINT004 — Oversized Job
+
+- Default severity: medium.
+- Threshold: more than 15 mapping-shaped steps in one job.
+- Detects jobs with at least 16 valid step mappings and includes the measured
+  step count.
+- Why it matters: very large jobs can be harder to review, navigate, and debug.
+
+Problematic:
+
+```yaml
+jobs:
+  build:
+    steps:
+      # 16 or more mapping-shaped steps
+```
+
+Improved when appropriate:
+
+```yaml
+jobs:
+  test:
+    steps:
+      - run: ./scripts/test.sh
+  package:
+    needs: test
+    steps:
+      - run: ./scripts/package.sh
+```
+
+False-positive considerations: exactly 15 valid steps are accepted. Scalar,
+null, list, and other malformed step entries are not counted.
+
+Known limitations: step count is only a structural signal. A cohesive 16-step
+job may be clearer than an artificial split, so remediation presents focused
+jobs, reusable workflows, composite actions, and scripts as options rather
+than mandatory changes.
+
+### MAINT005 — Duplicate Step Name
+
+- Default severity: low.
+- Detects duplicate non-empty step names within one job and reports every
+  occurrence after the first.
+- Why it matters: repeated labels make logs and failure summaries harder to
+  distinguish.
+
+Problematic:
+
+```yaml
+steps:
+  - name: Run tests
+    run: pytest
+  - name: Run Tests
+    run: npm test
+```
+
+Improved:
+
+```yaml
+steps:
+  - name: Run Python tests
+    run: pytest
+  - name: Run Node tests
+    run: npm test
+```
+
+False-positive considerations: names are trimmed and compared
+case-insensitively. Empty names are ignored, and names are never compared
+across different jobs.
+
+Known limitations: intentionally repeated labels are still reported. The rule
+does not compare shell commands, action references, or semantic step behavior.
+
+### MAINT006 — Long Inline Shell Script
+
+- Default severity: low.
+- Threshold: more than 20 non-empty lines in a scalar `run` value.
+- Detects run steps with at least 21 non-empty script lines and includes the
+  measured line count.
+- Why it matters: moving long shell logic into a version-controlled script can
+  improve isolated testing, readability, and reuse.
+
+Problematic:
+
+```yaml
+steps:
+  - name: Build and publish
+    run: |
+      # more than 20 non-empty lines
+      prepare
+      build
+      publish
+```
+
+Improved when appropriate:
+
+```yaml
+steps:
+  - name: Build and publish
+    run: ./scripts/build-and-publish.sh
+```
+
+False-positive considerations: exactly 20 non-empty lines are accepted. Blank
+lines, including leading and trailing blanks, are excluded. Non-string `run`
+values and non-run steps are ignored.
+
+Known limitations: the rule measures lines only and never inspects shell
+commands or complexity. Some readable scripts legitimately exceed the
+threshold, so extraction is a consideration rather than a requirement.
 
 ### REL001 — Missing Jobs
 

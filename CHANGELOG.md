@@ -37,3 +37,8 @@ and this project intends to follow
   checks while preserving `REL001`.
 - Typed reliability helpers for jobs, steps, services, source locations,
   container references, runner labels, and static Docker options.
+- Initial maintainability pack covering missing job and run-step names,
+  oversized jobs, duplicate step names, and long inline scripts while
+  preserving `MAINT001`.
+- Shared typed job/step traversal and focused maintainability normalization and
+  counting helpers.

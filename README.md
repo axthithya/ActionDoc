@@ -4,8 +4,8 @@ ActionDoctor is an open-source, offline CLI for finding security, reliability,
 cost, and maintainability problems in GitHub Actions workflows.
 
 The CLI currently discovers and validates workflow YAML, then runs five
-security rules, five cost-efficiency rules, six reliability rules, and one
-maintainability rule through a reusable rule engine. The final health score is
+security rules, five cost-efficiency rules, six reliability rules, and six
+maintainability rules through a reusable rule engine. The final health score is
 planned but is not implemented yet.
 
 ## Requirements
@@ -81,7 +81,7 @@ Repository: /path/to/repository
 Workflow files discovered: 3
 Successfully parsed: 2
 Failed to parse: 1
-Total rules executed: 34
+Total rules executed: 44
 Total findings: 1
 Rule execution failures: 0
 
@@ -118,6 +118,11 @@ with exit code `0` and an explanatory message.
 - `SEC004` — Untrusted Pull Request Checkout Risk (`critical`)
 - `SEC005` — Secret Exposed Through Workflow-Level Environment (`medium`)
 - `MAINT001` — Missing Workflow Name (`low`)
+- `MAINT002` — Missing Job Name (`low`)
+- `MAINT003` — Unnamed Run Step (`low`)
+- `MAINT004` — Oversized Job (`medium`)
+- `MAINT005` — Duplicate Step Name (`low`)
+- `MAINT006` — Long Inline Shell Script (`low`)
 - `REL001` — Missing Jobs (`high`)
 - `REL002` — Missing Job Timeout (`medium`)
 - `REL003` — Mutable Container Image Reference (`medium`)
@@ -136,7 +141,8 @@ validation, and contributor instructions.
   do not calculate prices or guarantee monetary savings.
 - Reliability findings identify deterministic configuration risks; they do
   not guarantee that a workflow will or will not fail.
-- Broader maintainability rules are not yet implemented.
+- Maintainability findings identify structures that may be harder to review;
+  they do not imply that every reported structure must be changed.
 - The health score remains a placeholder and is not shown by `scan`.
 - JSON, Markdown, and SARIF reports are not available.
 - Only workflow files directly inside `.github/workflows/` are discovered,

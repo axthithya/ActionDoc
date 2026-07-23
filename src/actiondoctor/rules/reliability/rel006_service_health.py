@@ -5,10 +5,9 @@ from pathlib import Path
 from actiondoctor.models import Finding, RuleCategory, Severity, WorkflowFile
 from actiondoctor.rules.reliability.helpers import (
     has_health_check,
-    iter_jobs,
     iter_services,
-    location_fields,
 )
+from actiondoctor.rules.traversal import iter_jobs, location_fields
 
 
 class ServiceWithoutHealthCheckRule:

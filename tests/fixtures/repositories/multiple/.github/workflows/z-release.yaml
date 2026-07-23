@@ -4,7 +4,9 @@ permissions:
   contents: read
 jobs:
   release:
+    name: Release
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - run: echo "release"
+      - name: Run release
+        run: echo "release"

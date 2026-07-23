@@ -3,11 +3,8 @@
 from pathlib import Path
 
 from actiondoctor.models import Finding, RuleCategory, Severity, WorkflowFile
-from actiondoctor.rules.reliability.helpers import (
-    iter_jobs,
-    location_fields,
-    moving_runner_labels,
-)
+from actiondoctor.rules.reliability.helpers import moving_runner_labels
+from actiondoctor.rules.traversal import iter_jobs, location_fields
 
 
 class MovingRunnerLabelRule:

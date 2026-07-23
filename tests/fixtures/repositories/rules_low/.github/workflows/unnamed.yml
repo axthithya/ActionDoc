@@ -5,7 +5,9 @@ permissions:
   contents: read
 jobs:
   test:
+    name: Test
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - run: echo "ok"
+      - name: Confirm workflow
+        run: echo "ok"

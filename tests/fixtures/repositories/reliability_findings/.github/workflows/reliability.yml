@@ -4,6 +4,7 @@ permissions:
   contents: read
 jobs:
   test:
+    name: Test reliability
     runs-on: ubuntu-latest
     timeout-minutes: 15
     container:
@@ -12,4 +13,5 @@ jobs:
       cache:
         image: redis:7.2.5
     steps:
-      - run: echo test
+      - name: Run test
+        run: echo test
