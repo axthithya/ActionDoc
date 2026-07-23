@@ -32,3 +32,8 @@ and this project intends to follow
   matrices.
 - Typed cost-rule helpers for job/step traversal, action and shell-command
   matching, and static matrix sizing.
+- Initial reliability pack covering missing job timeouts, mutable container
+  images, moving runner labels, ignored failures, and missing service health
+  checks while preserving `REL001`.
+- Typed reliability helpers for jobs, steps, services, source locations,
+  container references, runner labels, and static Docker options.

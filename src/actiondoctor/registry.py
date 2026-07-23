@@ -14,7 +14,14 @@ from actiondoctor.rules.cost import (
     UnrestrictedPushRule,
 )
 from actiondoctor.rules.maintainability import MissingWorkflowNameRule
-from actiondoctor.rules.reliability import MissingJobsRule
+from actiondoctor.rules.reliability import (
+    ContinueOnErrorRule,
+    MissingJobsRule,
+    MissingJobTimeoutRule,
+    MovingRunnerLabelRule,
+    MutableContainerImageRule,
+    ServiceWithoutHealthCheckRule,
+)
 from actiondoctor.rules.security import (
     BroadPermissionsRule,
     MissingExplicitPermissionsRule,
@@ -112,5 +119,10 @@ DEFAULT_RULES: tuple[Rule, ...] = (
     WorkflowSecretEnvironmentRule(),
     MissingWorkflowNameRule(),
     MissingJobsRule(),
+    MissingJobTimeoutRule(),
+    MutableContainerImageRule(),
+    MovingRunnerLabelRule(),
+    ContinueOnErrorRule(),
+    ServiceWithoutHealthCheckRule(),
 )
 DEFAULT_REGISTRY = RuleRegistry(DEFAULT_RULES)

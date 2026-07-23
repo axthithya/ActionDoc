@@ -375,14 +375,208 @@ make a scan fail.
 
 ### REL001 — Missing Jobs
 
-- Category: reliability
-- Severity: high
-- Reports when top-level `jobs` is absent, empty, or not a mapping.
-- Does not report a non-empty jobs mapping.
-- Remediation: add at least one job under the top-level `jobs` key.
+- Default severity: high.
+- Detects an absent, empty, or non-mapping top-level `jobs` value.
+- Why it may affect reliability: a workflow without a valid job cannot perform
+  its intended automation.
 
-REL001 reaches the temporary CLI failure threshold and makes the scan return
-exit code 1.
+Problematic:
+
+```yaml
+name: CI
+on: push
+```
+
+Improved:
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: pytest
+```
+
+False-positive considerations: any non-empty jobs mapping is accepted; job
+schema validation belongs to focused rules and GitHub's workflow validator.
+
+Known limitations: REL001 does not determine whether jobs can execute or
+whether their dependencies and conditions are reachable. It reaches the
+temporary high-severity CLI threshold and makes the scan return exit code 1.
+
+### REL002 — Missing Job Timeout
+
+- Default severity: medium.
+- Detects ordinary mapping-shaped jobs without a positive static
+  `timeout-minutes` value.
+- Why it may affect reliability: an unbounded hung command can occupy a runner
+  until the platform terminates it.
+
+Problematic:
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: pytest
+```
+
+Improved:
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - run: pytest
+```
+
+False-positive considerations: reusable-workflow jobs with job-level `uses`
+and malformed job values are ignored. Positive numeric values are accepted.
+Expression-based values are ignored because their result cannot be evaluated
+offline.
+
+Known limitations: ActionDoctor does not infer an ideal timeout. Remediation
+intentionally asks maintainers to choose a value based on expected job
+duration rather than prescribing one universal number.
+
+### REL003 — Mutable Container Image Reference
+
+- Default severity: medium.
+- Detects untagged images and confidently floating tags such as `latest`,
+  `stable`, `edge`, and `nightly` in job containers and services.
+- Why it may affect reliability: a mutable reference can resolve to different
+  container content without a workflow change.
+
+Problematic:
+
+```yaml
+container:
+  image: postgres:latest
+services:
+  cache:
+    image: redis
+```
+
+Improved:
+
+```yaml
+container:
+  image: postgres:16.3
+services:
+  cache:
+    image: redis@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+```
+
+False-positive considerations: fixed tags, digest references, dynamic
+expressions, empty values, and unsupported container shapes are ignored.
+Registry ports are separated from tags using the final path component, so
+`localhost:5000/image:1.2` is treated as tagged.
+
+Known limitations: tags other than the documented floating set are accepted,
+even though registries can technically move any tag. ActionDoctor does not
+query registries, verify digest availability, or inspect images mentioned in
+shell commands.
+
+### REL004 — Moving Runner Label
+
+- Default severity: low.
+- Detects `ubuntu-latest`, `windows-latest`, and `macos-latest` as scalar
+  values or members of a fully static runner-label list.
+- Why it may affect reliability: a `*-latest` label may point to a newer
+  hosted image in the future and introduce unexpected environment changes.
+
+Problematic:
+
+```yaml
+runs-on: ubuntu-latest
+```
+
+Improved:
+
+```yaml
+runs-on: ubuntu-24.04
+```
+
+False-positive considerations: versioned labels, `self-hosted`, unsupported
+values, matrix expressions, and lists containing expressions are ignored.
+
+Known limitations: custom labels that organizations repoint are not detected.
+The rule does not inspect runner image contents or predict GitHub's image
+migration schedule.
+
+### REL005 — Failure Ignored With Continue-on-Error
+
+- Default severity: medium for steps and high for jobs.
+- Detects literal boolean `continue-on-error: true` at job or step scope.
+- Why it may affect reliability: ignored failures may allow dependent jobs or
+  deployments to continue without a required result.
+
+Problematic:
+
+```yaml
+jobs:
+  deploy:
+    continue-on-error: true
+    steps:
+      - run: ./deploy
+```
+
+Improved:
+
+```yaml
+jobs:
+  deploy:
+    steps:
+      - run: ./deploy
+```
+
+False-positive considerations: literal `false`, strings, and expressions are
+ignored. Findings identify the job and, for steps, include the zero-based
+index and a non-empty step name when available. Each YAML location is reported
+once.
+
+Known limitations: `continue-on-error` can be intentional for experimental or
+advisory work. The rule does not claim every use is wrong; remediation asks
+maintainers to confirm intent and keep the ignored failure visible. Only a
+job-level high finding reaches the current CLI failure threshold.
+
+### REL006 — Service Container Without Health Check
+
+- Default severity: low.
+- Detects statically analyzable service containers with an image but without a
+  recognizable `--health-cmd` in their Docker options.
+- Why it may affect reliability: a health check can help dependent test
+  commands wait until a service is ready.
+
+Problematic:
+
+```yaml
+services:
+  database:
+    image: postgres:16.3
+```
+
+Improved:
+
+```yaml
+services:
+  database:
+    image: postgres:16.3
+    options: >-
+      --health-cmd "pg_isready"
+      --health-interval 10s
+```
+
+False-positive considerations: services without images, malformed service
+values, dynamic images, dynamic options, unsupported option types, and options
+containing `--health-cmd` are ignored.
+
+Known limitations: the rule recognizes command presence but cannot validate
+whether the command accurately represents readiness. GitHub Actions does not
+always require a health check, and the finding does not claim otherwise.
 
 ## Explicit registry
 

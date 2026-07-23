@@ -1,10 +1,12 @@
-name: Release
+name: Ignored step failure
 on: workflow_dispatch
 permissions:
   contents: read
 jobs:
-  release:
+  test:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - run: echo "release"
+      - name: Optional lint
+        run: exit 1
+        continue-on-error: true

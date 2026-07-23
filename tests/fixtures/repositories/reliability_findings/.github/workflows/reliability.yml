@@ -1,0 +1,15 @@
+name: Reliability findings
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: postgres:latest
+    services:
+      cache:
+        image: redis:7.2.5
+    steps:
+      - run: echo test

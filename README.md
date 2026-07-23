@@ -3,10 +3,10 @@
 ActionDoctor is an open-source, offline CLI for finding security, reliability,
 cost, and maintainability problems in GitHub Actions workflows.
 
-The CLI currently discovers and validates workflow YAML, then runs initial
-five-rule security and cost-efficiency packs plus two demonstration rules
-through a reusable rule engine. The final cross-category catalog and health
-score are planned but are not implemented yet.
+The CLI currently discovers and validates workflow YAML, then runs five
+security rules, five cost-efficiency rules, six reliability rules, and one
+maintainability rule through a reusable rule engine. The final health score is
+planned but is not implemented yet.
 
 ## Requirements
 
@@ -81,7 +81,7 @@ Repository: /path/to/repository
 Workflow files discovered: 3
 Successfully parsed: 2
 Failed to parse: 1
-Total rules executed: 24
+Total rules executed: 34
 Total findings: 1
 Rule execution failures: 0
 
@@ -119,6 +119,11 @@ with exit code `0` and an explanatory message.
 - `SEC005` — Secret Exposed Through Workflow-Level Environment (`medium`)
 - `MAINT001` — Missing Workflow Name (`low`)
 - `REL001` — Missing Jobs (`high`)
+- `REL002` — Missing Job Timeout (`medium`)
+- `REL003` — Mutable Container Image Reference (`medium`)
+- `REL004` — Moving Runner Label (`low`)
+- `REL005` — Failure Ignored With Continue-on-Error (`medium`/`high`)
+- `REL006` — Service Container Without Health Check (`low`)
 
 See [Rule documentation](docs/RULES.md) for behavior, ordering, registry
 validation, and contributor instructions.
@@ -129,7 +134,9 @@ validation, and contributor instructions.
   complete GitHub Actions security audit.
 - Cost findings identify configurations that may increase runner usage; they
   do not calculate prices or guarantee monetary savings.
-- Broader reliability and maintainability rule packs are not yet implemented.
+- Reliability findings identify deterministic configuration risks; they do
+  not guarantee that a workflow will or will not fail.
+- Broader maintainability rules are not yet implemented.
 - The health score remains a placeholder and is not shown by `scan`.
 - JSON, Markdown, and SARIF reports are not available.
 - Only workflow files directly inside `.github/workflows/` are discovered,

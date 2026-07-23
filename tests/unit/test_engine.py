@@ -46,14 +46,18 @@ def test_engine_runs_every_rule_across_multiple_workflows() -> None:
     workflows = [
         workflow(
             "valid.yml",
-            {"name": "CI", "permissions": {}, "jobs": {"test": {}}},
+            {
+                "name": "CI",
+                "permissions": {},
+                "jobs": {"test": {"timeout-minutes": 10}},
+            },
         ),
         workflow("incomplete.yml", {"permissions": {}}),
     ]
 
     result = RuleEngine().run(workflows, DEFAULT_REGISTRY.rules)
 
-    assert result.rules_executed == 24
+    assert result.rules_executed == 34
     assert [finding.rule_id for finding in result.findings] == [
         "REL001",
         "MAINT001",
@@ -81,14 +85,18 @@ def test_engine_returns_no_findings_for_valid_workflow() -> None:
         [
             workflow(
                 "valid.yml",
-                {"name": "CI", "permissions": {}, "jobs": {"test": {}}},
+                {
+                    "name": "CI",
+                    "permissions": {},
+                    "jobs": {"test": {"timeout-minutes": 10}},
+                },
             )
         ],
         DEFAULT_REGISTRY.rules,
     )
 
     assert result.findings == []
-    assert result.rules_executed == 12
+    assert result.rules_executed == 17
 
 
 def test_engine_isolates_rule_execution_failure() -> None:
