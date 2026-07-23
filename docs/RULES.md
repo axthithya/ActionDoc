@@ -45,6 +45,182 @@ different meaning.
 
 ## Current rules
 
+### COST001 - Missing Concurrency Cancellation
+
+- Severity: medium.
+- Detects `pull_request` and `pull_request_target` workflows without a
+  top-level concurrency mapping that has literal `cancel-in-progress: true`.
+- Why it may affect runner usage: superseded commits can leave older workflow
+  runs executing even though a newer pull-request result is more relevant.
+
+Bad:
+
+```yaml
+on: pull_request
+jobs:
+  test: {}
+```
+
+Improved:
+
+```yaml
+on: pull_request
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+```
+
+False-positive considerations: push-only, scheduled-only, and manually
+triggered workflows are ignored. Mapping, scalar, and list event syntax are
+supported. Expression-based groups are accepted.
+
+Known limitations: an expression-based `cancel-in-progress` value is reported
+with uncertain wording because its result cannot be determined statically.
+The rule does not evaluate expression semantics or job-level concurrency.
+
+### COST002 - Missing Python Dependency Cache
+
+- Severity: low.
+- Detects a job that uses `actions/setup-python`, runs a recognized Python
+  dependency installation command, and has no configured setup cache or
+  earlier `actions/cache` step.
+- Why it may affect runner usage: repeatedly downloading unchanged dependency
+  artifacts can lengthen otherwise identical jobs.
+
+Bad:
+
+```yaml
+steps:
+  - uses: actions/setup-python@0123456789abcdef0123456789abcdef01234567
+  - run: python -m pip install -r requirements.txt
+```
+
+Improved:
+
+```yaml
+steps:
+  - uses: actions/setup-python@0123456789abcdef0123456789abcdef01234567
+    with:
+      cache: pip
+  - run: python -m pip install -r requirements.txt
+```
+
+False-positive considerations: the rule requires both the setup action and a
+recognized install command in the same job. It reports at most once per job.
+An `actions/cache` step only suppresses the finding when it precedes the first
+recognized installation.
+
+Known limitations: matching is intentionally lexical and recognizes command
+segments beginning with `pip install`, `pip3 install`, `python[3] -m pip
+install`, `poetry install`, or `pipenv install`. Wrappers, aliases, environment
+variable indirection, and custom scripts are not interpreted. An earlier
+`actions/cache` is assumed relevant; its path and key are not validated.
+
+### COST003 - Missing Node Dependency Cache
+
+- Severity: low.
+- Detects a job that uses `actions/setup-node`, runs a recognized Node
+  dependency installation command, and has no configured setup cache or
+  earlier `actions/cache` step.
+- Why it may affect runner usage: restoring package-manager data can avoid
+  repeated dependency downloads across otherwise similar runs.
+
+Bad:
+
+```yaml
+steps:
+  - uses: actions/setup-node@0123456789abcdef0123456789abcdef01234567
+  - run: npm ci
+```
+
+Improved:
+
+```yaml
+steps:
+  - uses: actions/setup-node@0123456789abcdef0123456789abcdef01234567
+    with:
+      cache: npm
+  - run: npm ci
+```
+
+False-positive considerations: jobs that only execute Node commands without a
+recognized dependency installation are ignored. A cache must be configured
+before the first installation, and only one finding is emitted per job.
+
+Known limitations: matching recognizes command segments beginning with `npm
+install`, `npm ci`, `yarn install`, or `pnpm install`. It does not interpret
+package scripts, wrappers, aliases, or custom cache implementations. An
+earlier `actions/cache` is assumed relevant without validating its inputs.
+
+### COST004 - Unrestricted Push Workflow
+
+- Severity: low.
+- Detects statically identifiable push triggers without branch, path, or tag
+  filters.
+- Why it may affect runner usage: some workflows only need to run for selected
+  branches or changed paths, although running on every push can be intentional.
+
+Bad:
+
+```yaml
+on: push
+```
+
+Improved:
+
+```yaml
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+```
+
+False-positive considerations: `push: false`, absent push events, and push
+events with `branches`, `branches-ignore`, `paths`, `paths-ignore`, `tags`, or
+`tags-ignore` are ignored. The finding says filters *may* reduce runs and does
+not claim the workflow is wasteful.
+
+Known limitations: dynamic or otherwise unsupported push configurations are
+ignored. The rule cannot know whether broad push coverage is a project
+requirement or whether downstream job conditions already limit work.
+
+### COST005 - Large Unbounded Matrix
+
+- Severity: medium.
+- Detects a matrix whose fully static list-dimension Cartesian product exceeds
+  12 combinations.
+- Why it may affect runner usage: every generated combination can create a
+  separate job, so additional dimensions multiply execution.
+
+Bad:
+
+```yaml
+strategy:
+  matrix:
+    os: [ubuntu-latest, windows-latest, macos-latest]
+    python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+```
+
+Improved:
+
+```yaml
+strategy:
+  matrix:
+    os: [ubuntu-latest, windows-latest]
+    python: ["3.12", "3.13", "3.14"]
+```
+
+False-positive considerations: exactly 12 base combinations are accepted.
+Dynamic matrices and any matrix with an uncountable non-special dimension are
+ignored. `include` and `exclude` are excluded from the base product; a
+statically countable `include` list is mentioned separately.
+
+Known limitations: `exclude` entries are not subtracted because partial-match
+semantics make a simple static estimate misleading. `include` entries are
+reported as declared additions but do not affect the threshold. Expressions
+and effective GitHub job limits are not evaluated.
+
 ### SEC001 — Overly Broad Workflow Permissions
 
 - Severity: critical for `write-all`; high for mappings with at least two

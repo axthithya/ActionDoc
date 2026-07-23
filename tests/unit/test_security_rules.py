@@ -31,8 +31,13 @@ def workflow_fixture(name: str) -> WorkflowFile:
 
 
 def test_default_registry_contains_all_active_rules_in_order() -> None:
-    """The five security and two existing rules are explicitly active."""
+    """Cost, security, and the two earlier rules are explicitly active."""
     assert [rule.rule_id for rule in DEFAULT_REGISTRY.rules] == [
+        "COST001",
+        "COST002",
+        "COST003",
+        "COST004",
+        "COST005",
         "MAINT001",
         "REL001",
         "SEC001",

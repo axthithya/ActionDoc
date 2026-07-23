@@ -38,7 +38,7 @@ def test_scan_valid_repository() -> None:
     assert "Workflow files discovered: 2" in result.stdout
     assert "Successfully parsed: 2" in result.stdout
     assert "Failed to parse: 0" in result.stdout
-    assert "Total rules executed: 14" in result.stdout
+    assert "Total rules executed: 24" in result.stdout
     assert "Total findings: 0" in result.stdout
     assert ".github/workflows/a-ci.yml" in result.stdout
     assert ".github/workflows/z-release.yaml" in result.stdout
@@ -97,7 +97,7 @@ def test_low_severity_finding_does_not_fail_scan() -> None:
     result = runner.invoke(app, ["scan", str(FIXTURES / "rules_low")])
 
     assert result.exit_code == 0
-    assert "Total rules executed: 7" in result.stdout
+    assert "Total rules executed: 12" in result.stdout
     assert "Total findings: 1" in result.stdout
     assert "[LOW] MAINT001" in result.stdout
     assert "Missing Workflow Name" in result.stdout
@@ -132,7 +132,7 @@ def test_mixed_parse_failure_and_finding() -> None:
     assert result.exit_code == 1
     assert "Successfully parsed: 1" in result.stdout
     assert "Failed to parse: 1" in result.stdout
-    assert "Total rules executed: 7" in result.stdout
+    assert "Total rules executed: 12" in result.stdout
     assert "Total findings: 1" in result.stdout
     assert "Invalid YAML:" in result.stdout
     assert "MAINT001" in result.stdout
@@ -143,7 +143,7 @@ def test_security_findings_include_context_and_fail_scan() -> None:
     result = runner.invoke(app, ["scan", str(FIXTURES / "security_findings")])
 
     assert result.exit_code == 1
-    assert "Total rules executed: 7" in result.stdout
+    assert "Total rules executed: 12" in result.stdout
     assert "SEC001" in result.stdout
     assert "[CRITICAL]" in result.stdout
     assert "SEC003" in result.stdout
@@ -152,3 +152,16 @@ def test_security_findings_include_context_and_fail_scan() -> None:
     assert "job build" in result.stdout
     assert "jobs.build.steps[0].uses" in result.stdout
     assert "Remediation:" in result.stdout
+
+
+def test_cost_findings_are_shown_but_medium_does_not_fail_scan() -> None:
+    """The current temporary threshold remains high despite cost findings."""
+    result = runner.invoke(app, ["scan", str(FIXTURES / "cost_findings")])
+
+    assert result.exit_code == 0
+    assert "Total rules executed: 12" in result.stdout
+    assert "Total findings: 3" in result.stdout
+    assert "[MEDIUM] COST001" in result.stdout
+    assert "[LOW] COST002" in result.stdout
+    assert "[LOW] COST004" in result.stdout
+    assert "job python" in result.stdout

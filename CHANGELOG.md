@@ -27,3 +27,8 @@ and this project intends to follow
   environments.
 - Practical line, column, job, and YAML-path context for step-level findings.
 - Engine-level finding deduplication by rule and YAML location.
+- Initial cost-efficiency pack covering concurrency cancellation, Python and
+  Node dependency caching, unrestricted push triggers, and large static
+  matrices.
+- Typed cost-rule helpers for job/step traversal, action and shell-command
+  matching, and static matrix sizing.

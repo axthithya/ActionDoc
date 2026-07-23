@@ -3,10 +3,10 @@
 ActionDoctor is an open-source, offline CLI for finding security, reliability,
 cost, and maintainability problems in GitHub Actions workflows.
 
-The CLI currently discovers and validates workflow YAML, then runs an initial
-five-rule security pack plus two demonstration rules through a reusable rule
-engine. The full cross-category catalog and final health score are planned but
-are not implemented yet.
+The CLI currently discovers and validates workflow YAML, then runs initial
+five-rule security and cost-efficiency packs plus two demonstration rules
+through a reusable rule engine. The final cross-category catalog and health
+score are planned but are not implemented yet.
 
 ## Requirements
 
@@ -81,7 +81,7 @@ Repository: /path/to/repository
 Workflow files discovered: 3
 Successfully parsed: 2
 Failed to parse: 1
-Total rules executed: 14
+Total rules executed: 24
 Total findings: 1
 Rule execution failures: 0
 
@@ -106,6 +106,12 @@ with exit code `0` and an explanatory message.
 
 ## Current rules
 
+- `COST001` - Missing Concurrency Cancellation (`medium`)
+- `COST002` - Missing Python Dependency Cache (`low`)
+- `COST003` - Missing Node Dependency Cache (`low`)
+- `COST004` - Unrestricted Push Workflow (`low`)
+- `COST005` - Large Unbounded Matrix (`medium`)
+
 - `SEC001` — Overly Broad Workflow Permissions (`high`/`critical`)
 - `SEC002` — Missing Explicit Permissions (`medium`)
 - `SEC003` — Third-Party Action Not Pinned to Commit SHA (`high`)
@@ -121,8 +127,9 @@ validation, and contributor instructions.
 
 - The current security pack is intentionally focused and does not constitute a
   complete GitHub Actions security audit.
-- Cost and broader reliability/maintainability rule packs are not yet
-  implemented.
+- Cost findings identify configurations that may increase runner usage; they
+  do not calculate prices or guarantee monetary savings.
+- Broader reliability and maintainability rule packs are not yet implemented.
 - The health score remains a placeholder and is not shown by `scan`.
 - JSON, Markdown, and SARIF reports are not available.
 - Only workflow files directly inside `.github/workflows/` are discovered,

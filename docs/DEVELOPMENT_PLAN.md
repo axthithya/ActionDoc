@@ -174,11 +174,11 @@ rules against parsed workflows.
 
 ## Phase 4: Initial rules
 
-**Status: In progress.** The initial production security pack (`SEC001` through
-`SEC005`) is complete with deterministic detection, practical YAML locations,
-false-positive protections, CLI integration, documentation, and offline
-tests. Broader cost, reliability, and maintainability rules remain for this
-phase.
+**Status: In progress.** The initial production security (`SEC001` through
+`SEC005`) and cost-efficiency (`COST001` through `COST005`) packs are complete
+with deterministic detection, practical YAML locations, false-positive
+protections, CLI integration, documentation, and offline tests. Broader
+reliability and maintainability rules remain for this phase.
 
 ### Goal
 

@@ -6,6 +6,13 @@ from collections.abc import Iterable
 from actiondoctor.models import RuleCategory, Severity
 from actiondoctor.models.finding import RULE_ID_PATTERN
 from actiondoctor.rules.base import Rule
+from actiondoctor.rules.cost import (
+    LargeMatrixRule,
+    MissingConcurrencyCancellationRule,
+    MissingNodeCacheRule,
+    MissingPythonCacheRule,
+    UnrestrictedPushRule,
+)
 from actiondoctor.rules.maintainability import MissingWorkflowNameRule
 from actiondoctor.rules.reliability import MissingJobsRule
 from actiondoctor.rules.security import (
@@ -93,6 +100,11 @@ class RuleRegistry:
 
 
 DEFAULT_RULES: tuple[Rule, ...] = (
+    MissingConcurrencyCancellationRule(),
+    MissingPythonCacheRule(),
+    MissingNodeCacheRule(),
+    UnrestrictedPushRule(),
+    LargeMatrixRule(),
     BroadPermissionsRule(),
     MissingExplicitPermissionsRule(),
     UnpinnedActionRule(),

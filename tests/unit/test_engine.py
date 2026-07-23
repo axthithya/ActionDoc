@@ -53,7 +53,7 @@ def test_engine_runs_every_rule_across_multiple_workflows() -> None:
 
     result = RuleEngine().run(workflows, DEFAULT_REGISTRY.rules)
 
-    assert result.rules_executed == 14
+    assert result.rules_executed == 24
     assert [finding.rule_id for finding in result.findings] == [
         "REL001",
         "MAINT001",
@@ -88,7 +88,7 @@ def test_engine_returns_no_findings_for_valid_workflow() -> None:
     )
 
     assert result.findings == []
-    assert result.rules_executed == 7
+    assert result.rules_executed == 12
 
 
 def test_engine_isolates_rule_execution_failure() -> None:
