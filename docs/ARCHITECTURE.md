@@ -17,9 +17,9 @@ The first release should:
 - calculate a stable health score from 0 to 100; and
 - provide predictable exit codes for local and CI use.
 
-SARIF, safe automatic fixes, and a packaged GitHub Action are planned extension
-points. The MVP remains local, deterministic, offline, and free of AI, cloud,
-and database dependencies.
+SARIF and safe automatic fixes are planned extension points. The reusable
+GitHub Action is a thin composite wrapper around the same installed CLI; it
+does not add cloud, database, or API dependencies.
 
 ## Design principles
 
@@ -452,6 +452,15 @@ actiondoctor version
 
 `rules` lists stable rule metadata without scanning. `version` prints only the
 installed version.
+
+### GitHub Action wrapper
+
+The root `action.yml` is a composite action. It passes validated inputs to a
+small Python entry point, which installs from the checked-out
+`$GITHUB_ACTION_PATH`, calls `python -m actiondoctor scan` using a subprocess
+argument list, optionally appends Markdown to the step summary, writes the
+report-path output, and propagates the CLI exit code unchanged. It contains no
+scanner, score, or rule logic. See [`GITHUB_ACTION.md`](GITHUB_ACTION.md).
 
 Recommended exit-code contract:
 

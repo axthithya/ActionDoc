@@ -122,3 +122,6 @@ exit threshold.
 - Markdown standard output contains no confirmation or terminal formatting.
 - Terminal output remains the default and supports `--no-color`.
 - Reporters are offline and do not mutate scan data.
+- The reusable GitHub Action selects these existing JSON or Markdown outputs;
+  see [`GITHUB_ACTION.md`](GITHUB_ACTION.md) for runner and step-summary
+  behavior.

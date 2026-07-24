@@ -51,3 +51,8 @@ and this project intends to follow
   from the shared scan result.
 - `--format` and atomic `--output` support with portable workflow paths,
   machine-clean standard output, and format-independent exit behavior.
+- Reusable composite GitHub Action with validated inputs, report-path output,
+  Markdown step-summary support, exact-source installation, and CLI exit-code
+  propagation.
+- Local GitHub Action integration coverage and verified full-SHA pins for
+  project workflow dependencies.

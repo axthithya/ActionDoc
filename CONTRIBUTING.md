@@ -27,11 +27,13 @@ Keep the scanner deterministic and offline. New runtime dependencies should
 have a clear, documented need. Please keep changes focused and include tests
 for public behavior.
 
-The scanner and rule engine are not implemented in the foundation phase.
-Before adding those features, review:
+Before extending scanning, reporting, or the reusable GitHub Action, review:
 
 - `docs/ARCHITECTURE.md`
 - `docs/DEVELOPMENT_PLAN.md`
+- `docs/RULES.md`
+- `docs/REPORT_FORMATS.md`
+- `docs/GITHUB_ACTION.md`
 
 ## Style
 
@@ -40,3 +42,7 @@ Before adding those features, review:
 - Use Ruff for formatting and linting.
 - Add or update pytest tests with each behavioral change.
 - Keep machine-readable stdout free of diagnostics and logging.
+- Keep the GitHub Action as a small wrapper around the existing CLI; do not
+  duplicate rule, scoring, or report logic in its entry point.
+- Pin external GitHub Actions in project workflows to verified full commit
+  SHAs, with a nearby version comment when useful.

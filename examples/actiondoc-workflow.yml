@@ -1,0 +1,27 @@
+name: ActionDoc audit example
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Audit GitHub Actions workflows
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        # actions/checkout v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Run ActionDoc
+        # Replace with the immutable release commit that contains action.yml.
+        uses: axthithya/ActionDoc@79b223ff6ae0a53440e51cea9e35fe7833aecf2b
+        with:
+          path: .
+          fail-on: high
+          report-format: markdown

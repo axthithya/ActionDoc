@@ -1,0 +1,43 @@
+name: ActionDoc
+description: Audit GitHub Actions workflows for security, cost-efficiency, reliability, and maintainability concerns.
+author: ActionDoctor contributors
+
+branding:
+  icon: shield
+  color: blue
+
+inputs:
+  path:
+    description: Repository path to scan.
+    required: false
+    default: "."
+  fail-on:
+    description: "Lowest finding severity that fails the action: critical, high, medium, low, or never."
+    required: false
+    default: high
+  report-format:
+    description: "Report format to generate: markdown, json, or none."
+    required: false
+    default: markdown
+  report-path:
+    description: Optional destination for the generated report.
+    required: false
+    default: ""
+
+outputs:
+  report-path:
+    description: Generated Markdown or JSON report path; empty when report-format is none or generation fails.
+    value: ${{ steps.actiondoc.outputs.report-path }}
+
+runs:
+  using: composite
+  steps:
+    - id: actiondoc
+      name: Run ActionDoc
+      shell: bash
+      env:
+        ACTIONDOC_PATH: ${{ inputs.path }}
+        ACTIONDOC_FAIL_ON: ${{ inputs.fail-on }}
+        ACTIONDOC_REPORT_FORMAT: ${{ inputs.report-format }}
+        ACTIONDOC_REPORT_PATH: ${{ inputs.report-path }}
+      run: python "$GITHUB_ACTION_PATH/scripts/github_action_entrypoint.py"

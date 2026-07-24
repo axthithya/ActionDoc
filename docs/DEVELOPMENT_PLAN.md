@@ -353,6 +353,11 @@ terminal.
 
 ## Phase 7: GitHub Action integration
 
+**Status: Complete (2026-07-24).** The composite ActionDoc wrapper, validated
+inputs, report-path output, Markdown step-summary integration, local-action CI
+coverage, full-SHA dependency pins, and user documentation are complete. SARIF
+and automatic report uploads remain deferred.
+
 ### Goal
 
 Run the published ActionDoctor CLI predictably in GitHub Actions without

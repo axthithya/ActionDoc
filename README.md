@@ -136,6 +136,27 @@ the health score or exit code. JSON uses public schema version `1.0`; see
 [Report formats](docs/REPORT_FORMATS.md) for its fields and compatibility
 policy. SARIF is not supported yet.
 
+## GitHub Action
+
+Use ActionDoc in GitHub Actions through the included composite action. It
+installs the source from the selected ActionDoc reference and delegates to the
+same local CLI:
+
+```yaml
+- name: Audit workflows
+  # Pin to an immutable ActionDoc release commit that includes action.yml.
+  uses: axthithya/ActionDoc@<immutable-release-sha>
+  with:
+    path: .
+    fail-on: high
+    report-format: markdown
+```
+
+Markdown reports are appended to the GitHub step summary. JSON and Markdown
+report paths are exposed as `steps.<id>.outputs.report-path`; no reports are
+uploaded automatically. See [GitHub Action documentation](docs/GITHUB_ACTION.md)
+for inputs, outputs, SHA-pinning, runner assumptions, and local testing.
+
 ## Current rules
 
 - `COST001` - Missing Concurrency Cancellation (`medium`)
@@ -176,6 +197,8 @@ validation, and contributor instructions.
 - Maintainability findings identify structures that may be harder to review;
   they do not imply that every reported structure must be changed.
 - SARIF reports are not available.
+- The GitHub Action expects a runner with `python`; self-hosted runners must
+  provide it.
 - Only workflow files directly inside `.github/workflows/` are discovered,
   matching GitHub Actions' workflow location.
 - Individual workflow files are limited to 1,000,000 bytes.
