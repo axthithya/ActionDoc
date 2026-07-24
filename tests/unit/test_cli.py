@@ -1,12 +1,15 @@
-"""Tests for the foundation CLI."""
+"""Tests for the ActionDoctor CLI."""
 
+import json
 from pathlib import Path
 
+import pytest
 from typer.testing import CliRunner
 
 from actiondoctor import __version__
 from actiondoctor.cli import app
 from actiondoctor.models import RuleEngineResult, RuleExecutionError
+from actiondoctor.reporting import ReportWriteError
 
 runner = CliRunner()
 FIXTURES = Path(__file__).parents[1] / "fixtures" / "repositories"
@@ -61,6 +64,8 @@ def test_scan_help_documents_reporting_options() -> None:
     assert result.exit_code == 0
     assert "--fail-on" in result.stdout
     assert "--no-color" in result.stdout
+    assert "--format" in result.stdout
+    assert "--output" in result.stdout
 
 
 def test_scan_mixed_repository_returns_one() -> None:
@@ -335,3 +340,238 @@ def test_scan_displays_score_rating_and_breakdowns() -> None:
     assert "Health rating" in result.stdout
     assert "reliability: 1" in result.stdout
     assert "high: 1" in result.stdout
+
+
+def test_json_format_writes_only_valid_json_to_stdout() -> None:
+    """JSON stdout contains exactly one parseable report document."""
+    result = runner.invoke(
+        app,
+        [
+            "scan",
+            str(FIXTURES / "rules_both"),
+            "--format",
+            "json",
+            "--fail-on",
+            "never",
+        ],
+    )
+
+    document = json.loads(result.stdout)
+    assert result.exit_code == 0
+    assert document["schema_version"] == "1.0"
+    assert document["finding_count"] == 2
+    assert "ActionDoc\nGitHub" not in result.stdout
+    assert "\x1b[" not in result.stdout
+    assert result.stdout.endswith("\n")
+
+
+def test_markdown_format_writes_clean_document_to_stdout() -> None:
+    """Markdown stdout has no terminal decoration or confirmation text."""
+    result = runner.invoke(
+        app,
+        ["scan", str(FIXTURES / "multiple"), "--format", "markdown"],
+    )
+
+    assert result.exit_code == 0
+    assert result.stdout.startswith("# ActionDoc Report\n")
+    assert "No findings were detected." in result.stdout
+    assert "\x1b[" not in result.stdout
+    assert result.stdout.endswith("\n")
+
+
+@pytest.mark.parametrize(
+    ("report_format", "suffix", "opening"),
+    [("json", "json", "{"), ("markdown", "md", "# ActionDoc Report")],
+)
+def test_file_output_creates_parents_and_prints_only_confirmation(
+    tmp_path: Path,
+    report_format: str,
+    suffix: str,
+    opening: str,
+) -> None:
+    """Selected exports are written atomically below new parent directories."""
+    output = tmp_path / "nested" / f"report.{suffix}"
+    result = runner.invoke(
+        app,
+        [
+            "scan",
+            str(FIXTURES / "multiple"),
+            "--format",
+            report_format,
+            "--output",
+            str(output),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert result.stdout.strip() == f"Wrote {report_format} report to {output}"
+    assert output.read_text(encoding="utf-8").startswith(opening)
+
+
+def test_file_output_replaces_existing_report(tmp_path: Path) -> None:
+    """A completed export atomically replaces an existing report."""
+    output = tmp_path / "report.json"
+    output.write_text("old", encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        [
+            "scan",
+            str(FIXTURES / "multiple"),
+            "--format",
+            "json",
+            "--output",
+            str(output),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert json.loads(output.read_text(encoding="utf-8"))["schema_version"] == "1.0"
+
+
+def test_terminal_format_rejects_output_path(tmp_path: Path) -> None:
+    """Terminal reports cannot be redirected through the file-export option."""
+    result = runner.invoke(
+        app,
+        [
+            "scan",
+            str(FIXTURES / "multiple"),
+            "--format",
+            "terminal",
+            "--output",
+            str(tmp_path / "report.txt"),
+        ],
+    )
+
+    assert result.exit_code == 2
+    assert "--output requires --format json" in result.output
+    assert "markdown" in result.output
+
+
+def test_invalid_report_format_is_a_usage_error() -> None:
+    """Typer rejects unknown report formats before scanning."""
+    result = runner.invoke(
+        app,
+        ["scan", str(FIXTURES / "multiple"), "--format", "sarif"],
+    )
+
+    assert result.exit_code == 2
+
+
+def test_directory_output_returns_application_error(tmp_path: Path) -> None:
+    """A directory cannot be replaced with a report file."""
+    result = runner.invoke(
+        app,
+        [
+            "scan",
+            str(FIXTURES / "multiple"),
+            "--format",
+            "json",
+            "--output",
+            str(tmp_path),
+        ],
+    )
+
+    assert result.exit_code == 2
+    assert "Output path is a directory" in result.stdout
+
+
+def test_simulated_unwritable_output_returns_two(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """File-system write failures are clear application errors."""
+
+    def fail_write(_path: Path, _content: str) -> None:
+        raise ReportWriteError("Could not write report: permission denied")
+
+    monkeypatch.setattr("actiondoctor.cli.write_report_atomic", fail_write)
+    result = runner.invoke(
+        app,
+        [
+            "scan",
+            str(FIXTURES / "multiple"),
+            "--format",
+            "json",
+            "--output",
+            str(tmp_path / "report.json"),
+        ],
+    )
+
+    assert result.exit_code == 2
+    assert "permission denied" in result.stdout
+
+
+@pytest.mark.parametrize("report_format", ["json", "markdown"])
+def test_export_format_preserves_finding_threshold(report_format: str) -> None:
+    """Changing representation does not change configured scan failure."""
+    failing = runner.invoke(
+        app,
+        ["scan", str(FIXTURES / "rules_high"), "--format", report_format],
+    )
+    passing = runner.invoke(
+        app,
+        [
+            "scan",
+            str(FIXTURES / "rules_high"),
+            "--format",
+            report_format,
+            "--fail-on",
+            "never",
+        ],
+    )
+
+    assert failing.exit_code == 1
+    assert passing.exit_code == 0
+
+
+def test_json_parse_error_with_never_is_valid_json_and_exits_one() -> None:
+    """Incomplete JSON scans remain machine readable and fail independently."""
+    result = runner.invoke(
+        app,
+        ["scan", str(FIXTURES / "mixed"), "--format", "json", "--fail-on", "never"],
+    )
+
+    document = json.loads(result.stdout)
+    assert result.exit_code == 1
+    assert document["completeness"] == "incomplete"
+    assert document["parse_error_count"] == 1
+
+
+def test_file_output_preserves_finding_exit_code(tmp_path: Path) -> None:
+    """Writing a completed report does not replace the scan's failure policy."""
+    output = tmp_path / "report.json"
+    result = runner.invoke(
+        app,
+        [
+            "scan",
+            str(FIXTURES / "rules_high"),
+            "--format",
+            "json",
+            "--output",
+            str(output),
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert json.loads(output.read_text(encoding="utf-8"))["finding_count"] == 1
+    assert result.stdout.startswith("Wrote json report")
+
+
+def test_serialization_failure_emits_no_partial_json(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A renderer failure occurs before any JSON document reaches stdout."""
+
+    def fail_render(_reporter: object, _result: object) -> str:
+        raise ValueError("serialization failed")
+
+    monkeypatch.setattr("actiondoctor.cli.JsonReporter.render", fail_render)
+    result = runner.invoke(
+        app,
+        ["scan", str(FIXTURES / "multiple"), "--format", "json"],
+    )
+
+    assert result.exit_code == 2
+    assert '"schema_version"' not in result.stdout
+    assert "serialization failed" in result.stdout

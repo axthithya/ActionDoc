@@ -54,3 +54,11 @@ class FailureThreshold(StrEnum):
     MEDIUM = "medium"
     LOW = "low"
     NEVER = "never"
+
+
+class ReportFormat(StrEnum):
+    """Supported scan-report representations."""
+
+    TERMINAL = "terminal"
+    JSON = "json"
+    MARKDOWN = "markdown"

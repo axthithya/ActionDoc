@@ -60,6 +60,10 @@ finding severity produces exit code 1 and defaults to `high`. Accepted values
 are `critical`, `high`, `medium`, `low`, and `never`. Parse or rule execution
 errors produce exit code 1 even with `--fail-on never`.
 
+Terminal, JSON, and Markdown reporters consume this same score result. Changing
+`--format` or adding `--output` cannot change penalties, ratings, completeness,
+or the configured exit threshold.
+
 ## Limitations
 
 A numeric score is a prioritization aid, not proof that a workflow is secure,

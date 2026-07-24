@@ -47,3 +47,7 @@ and this project intends to follow
 - Dedicated Rich terminal audit reporting with grouped finding details,
   category/severity summaries, and separate parse and rule execution errors.
 - Configurable `--fail-on` thresholds and `--no-color` terminal output.
+- Deterministic JSON schema 1.0 and standalone Markdown scan reports generated
+  from the shared scan result.
+- `--format` and atomic `--output` support with portable workflow paths,
+  machine-clean standard output, and format-independent exit behavior.

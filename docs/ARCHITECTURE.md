@@ -423,6 +423,13 @@ Reporters do not filter findings, change severity, compute the score, or choose
 the process exit code. File output is handled by the application/CLI layer so
 renderers remain easy to test.
 
+JSON schema version 1.0 is projected through explicit public report models;
+reporters never expose raw internal Pydantic serialization. JSON and Markdown
+are rendered completely before output. File exports use a temporary file in
+the destination directory and atomic replacement so a failed write cannot
+leave a partial report. See [`REPORT_FORMATS.md`](REPORT_FORMATS.md) for the
+public fields and compatibility policy.
+
 ### CLI commands
 
 Typer exposes a thin command layer:
@@ -433,16 +440,14 @@ actiondoctor rules
 actiondoctor version
 ```
 
-`scan` is the primary command. Planned options include:
+`scan` is the primary command. Current reporting options include
+`--format terminal|json|markdown`, `--output PATH`, `--fail-on LEVEL`, and
+`--no-color`. Future selection/configuration options include:
 
-- `--format terminal|json|markdown`;
-- `--output PATH` (otherwise stdout);
 - `--min-severity LEVEL` for displayed/failed findings, with clearly defined
   score behavior;
 - `--enable RULE_ID` and `--disable RULE_ID`;
 - `--category CATEGORY`;
-- `--fail-on LEVEL` to set the CI threshold;
-- `--no-color` for terminal output; and
 - `--config PATH` when configuration is introduced.
 
 `rules` lists stable rule metadata without scanning. `version` prints only the

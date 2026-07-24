@@ -9,10 +9,22 @@ from rich.text import Text
 
 from actiondoctor import __version__
 from actiondoctor.engine import RuleEngine
-from actiondoctor.models import FailureThreshold, ScanResult, ScanStatus, Severity
+from actiondoctor.models import (
+    FailureThreshold,
+    ReportFormat,
+    ScanResult,
+    ScanStatus,
+    Severity,
+)
 from actiondoctor.parser import InvalidRepositoryError, WorkflowLoader
 from actiondoctor.registry import DEFAULT_REGISTRY
-from actiondoctor.reporting import TerminalReporter
+from actiondoctor.reporting import (
+    JsonReporter,
+    MarkdownReporter,
+    ReportWriteError,
+    TerminalReporter,
+    write_report_atomic,
+)
 from actiondoctor.scoring import HealthScorer
 
 SEVERITY_RANK = {
@@ -55,8 +67,28 @@ def scan(
         bool,
         typer.Option("--no-color", help="Disable ANSI colors in terminal output."),
     ] = False,
+    report_format: Annotated[
+        ReportFormat,
+        typer.Option(
+            "--format",
+            case_sensitive=False,
+            help="Report format written to the terminal or output file.",
+        ),
+    ] = ReportFormat.TERMINAL,
+    output: Annotated[
+        Path | None,
+        typer.Option(
+            "--output",
+            help="Write a JSON or Markdown report atomically to this path.",
+        ),
+    ] = None,
 ) -> None:
     """Discover, parse, and audit GitHub Actions workflow files."""
+    if output is not None and report_format is ReportFormat.TERMINAL:
+        raise typer.BadParameter(
+            "--output requires --format json or --format markdown",
+            param_hint="--output",
+        )
     console = Console(
         no_color=no_color,
         color_system=None if no_color else "auto",
@@ -89,8 +121,11 @@ def scan(
                 else ScanStatus.SUCCESS
             ),
         )
-        TerminalReporter(console).render(scan_result)
+        _emit_report(scan_result, report_format, output, console)
     except InvalidRepositoryError as error:
+        console.print(Text(f"Error: {error}", style="bold red"))
+        raise typer.Exit(code=2) from error
+    except ReportWriteError as error:
         console.print(Text(f"Error: {error}", style="bold red"))
         raise typer.Exit(code=2) from error
     except Exception as error:
@@ -114,3 +149,27 @@ def _threshold_reached(result: ScanResult, threshold: FailureThreshold) -> bool:
         SEVERITY_RANK.get(finding.severity, 0) >= minimum_rank
         for finding in result.findings
     )
+
+
+def _emit_report(
+    result: ScanResult,
+    report_format: ReportFormat,
+    output: Path | None,
+    console: Console,
+) -> None:
+    """Render exactly one selected report and optionally write it atomically."""
+    if report_format is ReportFormat.TERMINAL:
+        TerminalReporter(console).render(result)
+        return
+
+    rendered = (
+        JsonReporter().render(result)
+        if report_format is ReportFormat.JSON
+        else MarkdownReporter().render(result)
+    )
+    if output is None:
+        typer.echo(rendered, nl=False)
+        return
+
+    write_report_atomic(output, rendered)
+    typer.echo(f"Wrote {report_format.value} report to {output}")

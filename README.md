@@ -56,6 +56,8 @@ Pass the repository root to `scan`:
 actiondoctor scan /path/to/repository
 actiondoctor scan /path/to/repository --fail-on medium
 actiondoctor scan /path/to/repository --no-color
+actiondoctor scan /path/to/repository --format json
+actiondoctor scan /path/to/repository --format markdown
 ```
 
 When omitted, the repository defaults to the current directory:
@@ -116,6 +118,24 @@ means the repository path was invalid or an unexpected application error
 occurred. A missing or empty workflow directory is a successful empty scan
 with exit code `0` and an explanatory message.
 
+## Exporting reports
+
+The default `terminal` format keeps the Rich audit report. JSON and Markdown
+can be written to standard output or atomically to a file:
+
+```bash
+actiondoctor scan . --format json --fail-on never
+actiondoctor scan . --format markdown --fail-on never
+actiondoctor scan . --format json --output reports/actiondoc.json
+actiondoctor scan . --format markdown --output reports/actiondoc.md
+```
+
+File output creates missing parent directories, safely replaces an existing
+report, and prints only a short confirmation. Format selection does not change
+the health score or exit code. JSON uses public schema version `1.0`; see
+[Report formats](docs/REPORT_FORMATS.md) for its fields and compatibility
+policy. SARIF is not supported yet.
+
 ## Current rules
 
 - `COST001` - Missing Concurrency Cancellation (`medium`)
@@ -155,7 +175,7 @@ validation, and contributor instructions.
   not guarantee that a workflow will or will not fail.
 - Maintainability findings identify structures that may be harder to review;
   they do not imply that every reported structure must be changed.
-- JSON, Markdown, and SARIF reports are not available.
+- SARIF reports are not available.
 - Only workflow files directly inside `.github/workflows/` are discovered,
   matching GitHub Actions' workflow location.
 - Individual workflow files are limited to 1,000,000 bytes.

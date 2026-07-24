@@ -300,6 +300,11 @@ stable CI exit behavior.
 
 ## Phase 6: Export formats
 
+**Status: Complete (2026-07-24).** Deterministic JSON schema 1.0 and Markdown
+reports, portable explicit projections, machine-clean stdout, atomic file
+output, format-independent exit behavior, documentation, and offline tests are
+complete. SARIF remains explicitly deferred.
+
 ### Goal
 
 Provide stable JSON and Markdown reports from the same `ScanResult` used by the
