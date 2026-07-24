@@ -1,28 +1,85 @@
+<div align="center">
+
+<p aria-label="ActionDoc logo placeholder">🩺</p>
+
 # ActionDoc
 
+**Audit GitHub Actions workflows for security, reliability, cost, and maintainability.**
+
+[![PyPI](https://img.shields.io/badge/PyPI-not%20published-lightgrey)](https://pypi.org/)
+[![Python](https://img.shields.io/badge/Python-3.12%2B-blue)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-Apache--2.0-blue)](LICENSE)
 [![CI](https://github.com/axthithya/ActionDoc/actions/workflows/ci.yml/badge.svg)](https://github.com/axthithya/ActionDoc/actions/workflows/ci.yml)
-[![Python](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/)
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![GitHub Release](https://img.shields.io/badge/GitHub%20Release-pending-lightgrey)](https://github.com/axthithya/ActionDoc/releases)
 
-ActionDoc is a local, deterministic CLI that audits GitHub Actions workflows
-for security, cost-efficiency, reliability, and maintainability concerns. It
-reads workflow files from `.github/workflows/`; it does not send source code
-or workflow data to a service.
+</div>
 
-## What it does
+## What is ActionDoc?
 
-- Discovers and safely parses `.yml` and `.yaml` workflow files.
-- Runs 22 built-in rules: 5 security, 5 cost, 6 reliability, and 6
-  maintainability rules.
-- Produces a transparent 0--100 health score with severity and category
-  breakdowns.
-- Renders Rich terminal output and deterministic JSON or Markdown reports.
-- Works as a reusable composite GitHub Action using the same CLI.
+GitHub Actions workflows are code that runs with access to your repository,
+credentials, and CI budget. They are easy to overlook during review.
 
-## Install from source
+ActionDoc scans workflow files in `.github/workflows/` and points out common
+security risks, reliability issues, unnecessary CI cost, and maintainability
+problems. It runs locally, deterministically, and without sending workflow
+data anywhere.
 
-ActionDoc requires Python 3.12 or newer. Until a package index release is
-published, install a checked-out copy locally:
+Run one command, get actionable findings, a 0--100 health score, and reports
+you can use locally or in CI.
+
+## Why ActionDoc?
+
+| Without ActionDoc | With ActionDoc |
+| --- | --- |
+| Manual YAML review | One command to audit workflows |
+| Easy-to-miss security mistakes | Automatic rule-based detection |
+| No shared quality signal | Explainable 0--100 health score |
+| Notes scattered across reviews | Terminal, JSON, and Markdown reports |
+| No workflow quality gate | Reusable GitHub Action integration |
+
+## Features
+
+| Area | Included today |
+| --- | --- |
+| Security | Explicit-permission, action-pinning, untrusted-checkout, and secret-environment checks |
+| Reliability | Job timeout, container image, runner-label, ignored-failure, and service-health checks |
+| Cost | Concurrency, dependency cache, trigger, and static-matrix checks |
+| Maintainability | Workflow/job/step names, oversized jobs, duplicate steps, and long-script checks |
+| Reports | Rich terminal output plus deterministic JSON and Markdown exports |
+| Scoring | Transparent 0--100 score with severity and category breakdowns |
+| CLI | `scan` and `version` commands with configurable failure thresholds |
+| GitHub Action | A composite action that delegates to the same local CLI |
+
+ActionDoc currently includes **22 built-in rules**: 5 security, 5 cost,
+6 reliability, and 6 maintainability rules.
+
+## Installation
+
+ActionDoc requires Python 3.12 or newer. It is not published to PyPI yet, so
+install from a checked-out repository for now.
+
+### pip
+
+After the package is published, the install command will be:
+
+```bash
+python -m pip install actiondoctor
+```
+
+For the current source release, use the source instructions below instead.
+
+### uv
+
+If you use [uv](https://docs.astral.sh/uv/), the future package install will
+be:
+
+```bash
+uv tool install actiondoctor
+```
+
+Until publication, clone the repository and use `uv pip install -e ".[dev]"`.
+
+### From source
 
 ```bash
 git clone https://github.com/axthithya/ActionDoc.git
@@ -31,122 +88,188 @@ python -m venv .venv
 python -m pip install -e ".[dev]"
 ```
 
-On macOS or Linux, activate the environment with
-`source .venv/bin/activate`. On Windows PowerShell, use
-`./.venv/Scripts/Activate.ps1`.
+Activate the environment with `source .venv/bin/activate` on macOS/Linux or
+`./.venv/Scripts/Activate.ps1` in Windows PowerShell.
 
 ## Quick start
 
-```bash
-actiondoctor scan .
-actiondoctor scan . --fail-on medium
-actiondoctor scan . --format json --output reports/actiondoc.json
-```
+From a repository that contains `.github/workflows/`, run exactly these three
+commands:
 
-ActionDoc scans only files directly inside `.github/workflows/`. It supports
-both `.yml` and `.yaml`, processes them in deterministic order, and reports
-invalid or unreadable files instead of silently skipping them.
+```bash
+python -m pip install -e "path/to/ActionDoc[dev]"
+cd your-repository
+actiondoctor scan .
+```
 
 ```text
 ActionDoc
 GitHub Actions Workflow Audit
 
-Repository: /path/to/repository
+Repository: /path/to/your-repository
 Workflow files discovered: 2
 Successfully parsed: 2
 Total findings: 1
-Health score: 96/100
-Health rating: Excellent
+Health score: 90/100
+Health rating: Good
 
 .github/workflows/ci.yml
   [HIGH] SEC003 - Third-Party Action Not Pinned to Commit SHA
+    Remediation: Pin the action to a full commit SHA.
 ```
 
-## CLI and exit codes
+ActionDoc scans `.yml` and `.yaml` files directly inside
+`.github/workflows/`. Files are processed in deterministic order; malformed
+and unreadable files are reported rather than silently ignored.
+
+## Understanding the output
+
+The health score starts at **100**. Each finding reduces it according to its
+severity, with a maximum 20-point penalty per rule ID. Parse and rule errors
+are shown as incomplete analysis instead of silently changing the score.
+
+| Severity | What it means |
+| --- | --- |
+| Critical | A serious workflow risk that needs immediate attention. |
+| High | A significant issue worth fixing before relying on the workflow. |
+| Medium | A meaningful risk or quality issue to plan and address. |
+| Low | A smaller improvement that makes workflows safer or easier to maintain. |
+
+<div align="center">
+
+<em>Terminal output screenshot placeholder</em>
+
+</div>
+
+Read the complete scoring policy in [SCORING.md](docs/SCORING.md).
+
+## Report formats
+
+Terminal output is the default. JSON is useful for scripts and integrations;
+Markdown is useful for CI summaries and review artifacts.
 
 ```bash
-actiondoctor --help
-actiondoctor version
-actiondoctor scan --help
-python -m actiondoctor scan .
-```
+# Rich terminal report
+actiondoctor scan .
 
-`scan` defaults to the current directory and fails on `high` findings. Use
-`--fail-on critical`, `high`, `medium`, `low`, or `never` to set the threshold.
-`never` disables only finding-threshold failures; parse and rule errors still
-fail the scan.
+# Machine-readable JSON
+actiondoctor scan . --format json --output reports/actiondoc.json
 
-| Code | Meaning |
-| ---: | --- |
-| 0 | Scan completed and no finding reached the selected threshold. |
-| 1 | A finding reached the threshold, or parsing/rule execution was incomplete. |
-| 2 | Invalid CLI input, repository path, or unexpected application error. |
-
-A missing or empty workflow directory is a successful empty scan with a clear
-message.
-
-## Health score
-
-The score starts at 100. Findings subtract severity weights (`low` 1,
-`medium` 4, `high` 10, `critical` 20), with a maximum 20-point penalty per
-rule ID. Diagnostics do not silently affect the score; reports mark an
-incomplete scan explicitly. See the full [scoring policy](docs/SCORING.md).
-
-## Reports
-
-Terminal output is the default. JSON and Markdown contain the same scan result
-and can go to stdout or an atomically written file:
-
-```bash
-actiondoctor scan . --format json --fail-on never
+# Shareable Markdown
 actiondoctor scan . --format markdown --output reports/actiondoc.md
 ```
 
-The public JSON schema is versioned as `1.0`. See
-[report formats](docs/REPORT_FORMATS.md) for fields and compatibility rules.
-SARIF is planned, but not currently available.
+Use `--fail-on critical`, `high`, `medium`, `low`, or `never` to choose which
+finding severity returns exit code `1`. See [REPORT_FORMATS.md](docs/REPORT_FORMATS.md)
+for the public JSON schema and output behavior.
 
 ## GitHub Action
 
-The repository includes a composite action. Pin it to the immutable commit of
-a released ActionDoc version rather than a mutable tag:
+Use the included composite action to enforce the same checks in a workflow.
+Replace `<immutable-release-commit>` with the full commit SHA for the ActionDoc
+release you intend to trust.
 
 ```yaml
-- name: Audit workflows
-  uses: axthithya/ActionDoc@<immutable-release-commit>
-  with:
-    path: .
-    fail-on: high
-    report-format: markdown
+name: Audit workflows
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  actiondoc:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Audit GitHub Actions workflows
+        uses: axthithya/ActionDoc@<immutable-release-commit>
+        with:
+          path: .
+          fail-on: high
+          report-format: markdown
 ```
 
-Markdown is appended to the GitHub step summary. JSON and Markdown report
-paths are available through `steps.<id>.outputs.report-path`. Read the
-[GitHub Action guide](docs/GITHUB_ACTION.md) before using it in CI.
+| Input | Default | Purpose |
+| --- | --- | --- |
+| `path` | `.` | Repository path to scan. |
+| `fail-on` | `high` | Lowest severity that fails the Action. |
+| `report-format` | `markdown` | `markdown`, `json`, or `none`. |
+| `report-path` | generated | Optional destination for the report file. |
 
-## Rules
+Markdown output is added to the GitHub step summary. The report path is also
+available as `steps.<id>.outputs.report-path`. See [GITHUB_ACTION.md](docs/GITHUB_ACTION.md)
+for local testing, runner requirements, and pinning guidance.
 
-The built-in packs cover explicit permissions, action SHA pinning, untrusted
-checkout patterns, concurrency, dependency caches, matrices, timeouts,
-container references, runner labels, ignored failures, workflow/job/step
-naming, oversized jobs, duplicate step names, and long scripts. See the
-[rule reference](docs/RULES.md) for each rule's behavior and remediation.
+## Rule categories
 
-## Limitations and roadmap
+| Category | Description | Rule count |
+| --- | --- | ---: |
+| Security | Finds risky permissions, references, checkout patterns, and secret exposure. | 5 |
+| Reliability | Finds settings that can make a workflow flaky or hide failures. | 6 |
+| Cost | Finds workflow choices likely to consume unnecessary runner time. | 5 |
+| Maintainability | Finds structures that make workflows harder to review and change. | 6 |
 
-ActionDoc is a focused static audit, not a complete GitHub Actions security
-review or pricing model. It makes no network requests, does not apply fixes,
-and currently has no SARIF output or suppression/configuration file support.
-The [roadmap](docs/ROADMAP.md) describes planned work without making release
-date promises.
+## Example findings
 
-## Contributing and support
+| Rule | Example | Why it matters |
+| --- | --- | --- |
+| `SEC003` | Third-party Action Not Pinned to Commit SHA | Mutable tags can change after review; a full SHA makes the revision explicit. |
+| `REL005` | Failure Ignored With Continue-on-Error | Ignored failures can allow later steps to proceed without a reliable result. |
+| `MAINT004` | Oversized Job | Very large jobs are harder to understand, review, and safely modify. |
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) for local checks and the rule
-contribution checklist. Please report vulnerabilities privately under the
-[security policy](SECURITY.md), and use [SUPPORT.md](SUPPORT.md) for usage
-questions. Community expectations are in the [code of conduct](CODE_OF_CONDUCT.md).
+See [RULES.md](docs/RULES.md) for all implemented rules, their rationale, and
+remediation guidance.
+
+## Project structure
+
+```text
+ActionDoc/
+├── src/actiondoctor/       # CLI, parsing, rules, scoring, and reports
+├── tests/                  # Unit tests and workflow fixtures
+├── docs/                   # User, contributor, and release documentation
+├── .github/                # CI, release validation, and issue templates
+├── action.yml              # Reusable composite GitHub Action
+├── scripts/                # Action entry point
+└── pyproject.toml          # Package metadata and tool configuration
+```
+
+## Documentation
+
+| Topic | Read more |
+| --- | --- |
+| Architecture | [ARCHITECTURE.md](docs/ARCHITECTURE.md) |
+| Rules | [RULES.md](docs/RULES.md) |
+| Scoring | [SCORING.md](docs/SCORING.md) |
+| Reports | [REPORT_FORMATS.md](docs/REPORT_FORMATS.md) |
+| GitHub Action | [GITHUB_ACTION.md](docs/GITHUB_ACTION.md) |
+| Release guide | [RELEASING.md](docs/RELEASING.md) |
+| Contributing | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| Security | [SECURITY.md](SECURITY.md) |
+| Support | [SUPPORT.md](SUPPORT.md) |
+
+## Roadmap
+
+- [x] Local workflow discovery, parsing, rules, scoring, and reports
+- [x] Reusable GitHub Action
+- [ ] SARIF output
+- [ ] Safe, opt-in auto-fixes
+- [ ] Configuration and reviewed suppressions
+
+These are directions, not release promises. See [ROADMAP.md](docs/ROADMAP.md)
+for the current scope and limitations.
+
+## Contributing
+
+Contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md) for
+the local setup, quality checks, and rule contribution checklist. Please follow
+the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## License
 
-Licensed under the [Apache License 2.0](LICENSE).
+ActionDoc is licensed under the [Apache License 2.0](LICENSE).
