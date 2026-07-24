@@ -1,48 +1,62 @@
-# Contributing to ActionDoctor
+# Contributing to ActionDoc
 
-Thank you for helping improve ActionDoctor.
+Thanks for helping improve ActionDoc. The project is an offline, deterministic
+GitHub Actions workflow auditor; please keep contributions focused, testable,
+and free of network-dependent runtime behavior.
 
-## Development environment
+## Development setup
 
-ActionDoctor requires Python 3.12 or newer. Create a virtual environment,
-activate it, and install the package with its development dependencies:
+ActionDoc requires Python 3.12 or newer.
 
 ```bash
 python -m venv .venv
 python -m pip install -e ".[dev]"
-```
-
-Run all quality checks before submitting a change:
-
-```bash
 ruff check .
 ruff format --check .
 mypy src
 pytest
 ```
 
-## Scope
+Review [the architecture](docs/ARCHITECTURE.md),
+[rule guidance](docs/RULES.md), and the [development plan](docs/DEVELOPMENT_PLAN.md)
+before changing scanner behavior. The GitHub Action wrapper is deliberately
+thin; do not duplicate scanner, scoring, or reporting logic in it.
 
-Keep the scanner deterministic and offline. New runtime dependencies should
-have a clear, documented need. Please keep changes focused and include tests
-for public behavior.
+## Contributing a rule
 
-Before extending scanning, reporting, or the reusable GitHub Action, review:
+Rules must be small, deterministic, and side-effect free. A new rule should:
 
-- `docs/ARCHITECTURE.md`
-- `docs/DEVELOPMENT_PLAN.md`
-- `docs/RULES.md`
-- `docs/REPORT_FORMATS.md`
-- `docs/GITHUB_ACTION.md`
+1. Reserve the next category-prefixed ID (`SEC`, `COST`, `REL`, or `MAINT`).
+2. Implement the typed rule contract under the matching `src/actiondoctor/rules/`
+   package.
+3. Define concise title, description, category, and default severity metadata.
+4. Register the rule in the explicit default registry; do not add runtime
+   package scanning.
+5. Return findings with stable relative paths and source locations whenever
+   the YAML node provides them.
+6. Add focused fixtures and tests for positive cases, false positives, unusual
+   but valid YAML, multiple workflows, and deterministic ordering.
+7. Document detection behavior, rationale, remediation, and known limitations
+   in `docs/RULES.md`.
+8. Confirm the rule does not mutate workflows, perform I/O, print output, or
+   affect scoring outside of its findings.
 
-## Style
+## Tests and documentation
 
-- Target Python 3.12 or newer.
-- Add type annotations to production code.
-- Use Ruff for formatting and linting.
-- Add or update pytest tests with each behavioral change.
-- Keep machine-readable stdout free of diagnostics and logging.
-- Keep the GitHub Action as a small wrapper around the existing CLI; do not
-  duplicate rule, scoring, or report logic in its entry point.
-- Pin external GitHub Actions in project workflows to verified full commit
-  SHAs, with a nearby version comment when useful.
+Every public behavior change needs pytest coverage. Update CLI examples,
+reporting documentation, and GitHub Action documentation when they change.
+Keep JSON stdout machine-readable and keep diagnostics out of report renderers.
+Use checked-in fixtures rather than live repositories or network services.
+
+## Style and pull requests
+
+- Target Python 3.12+ and add type annotations to production code.
+- Let Ruff format code; fix lint and mypy issues rather than ignoring them.
+- Pin third-party Actions in this repository's workflows to full verified SHAs.
+- Keep commits small and use a clear prefix such as `feat:`, `fix:`, `docs:`,
+  `test:`, or `chore:`.
+- Explain the user impact, tests run, and documentation changes in the pull
+  request. Link the relevant issue when there is one.
+
+Please follow the [Code of Conduct](CODE_OF_CONDUCT.md). For vulnerabilities,
+use the private process in [SECURITY.md](SECURITY.md), not a public issue.

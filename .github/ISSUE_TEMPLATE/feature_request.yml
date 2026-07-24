@@ -1,0 +1,35 @@
+name: Feature request
+description: Propose a focused improvement to ActionDoc.
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: Explain the workflow problem or user need.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: true
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Example workflow
+      description: Use a sanitized YAML example when relevant.
+      render: yaml
+  - type: textarea
+    id: false-positives
+    attributes:
+      label: False-positive considerations
+      description: Required for new rule proposals; explain when it should not report.

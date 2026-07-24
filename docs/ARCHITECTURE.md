@@ -1,8 +1,8 @@
-# ActionDoctor Architecture
+# ActionDoc Architecture
 
 ## Status and scope
 
-This document defines the target architecture for ActionDoctor, an offline,
+This document defines the target architecture for ActionDoc, an offline,
 deterministic CLI that analyzes GitHub Actions workflow files. It is a design
 contract for future implementation; it does not imply that every component
 described here exists yet.
@@ -42,7 +42,7 @@ does not add cloud, database, or API dependencies.
 
 ## System context
 
-ActionDoctor reads only the selected repository or path and writes only to
+ActionDoc reads only the selected repository or path and writes only to
 stdout/stderr or an explicitly selected report file.
 
 ```text

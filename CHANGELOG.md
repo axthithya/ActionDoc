@@ -1,58 +1,25 @@
 # Changelog
 
-All notable changes to ActionDoctor will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project intends to follow
-[Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+All notable changes to ActionDoc are documented here. The format follows
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
+follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-07-24
+
 ### Added
 
-- Initial Python package foundation.
-- Typer CLI with version and placeholder scan commands.
-- Typed Pydantic models for findings and scan results.
-- Ruff, mypy, pytest, and GitHub Actions CI configuration.
-- Deterministic discovery of `.yml` and `.yaml` GitHub Actions workflows.
-- Safe YAML 1.2 parsing with structured, source-aware errors.
-- Repository scan summaries and documented parse-related exit codes.
-- Typed, side-effect-isolated rule protocol and deterministic rule engine.
-- Explicit rule registry with strict ID and metadata validation.
-- `MAINT001` missing-workflow-name demonstration rule.
-- `REL001` missing-jobs demonstration rule.
-- Finding summaries with a temporary high-severity CLI failure threshold.
-- Initial security pack covering broad/missing permissions, mutable action
-  references, risky `pull_request_target` checkout, and workflow-level secret
-  environments.
-- Practical line, column, job, and YAML-path context for step-level findings.
-- Engine-level finding deduplication by rule and YAML location.
-- Initial cost-efficiency pack covering concurrency cancellation, Python and
-  Node dependency caching, unrestricted push triggers, and large static
-  matrices.
-- Typed cost-rule helpers for job/step traversal, action and shell-command
-  matching, and static matrix sizing.
-- Initial reliability pack covering missing job timeouts, mutable container
-  images, moving runner labels, ignored failures, and missing service health
-  checks while preserving `REL001`.
-- Typed reliability helpers for jobs, steps, services, source locations,
-  container references, runner labels, and static Docker options.
-- Initial maintainability pack covering missing job and run-step names,
-  oversized jobs, duplicate step names, and long inline scripts while
-  preserving `MAINT001`.
-- Shared typed job/step traversal and focused maintainability normalization and
-  counting helpers.
-- Deterministic 0-100 health scoring with documented severity weights, a
-  20-point per-rule cap, ratings, breakdowns, and incomplete-scan state.
-- Dedicated Rich terminal audit reporting with grouped finding details,
-  category/severity summaries, and separate parse and rule execution errors.
-- Configurable `--fail-on` thresholds and `--no-color` terminal output.
-- Deterministic JSON schema 1.0 and standalone Markdown scan reports generated
-  from the shared scan result.
-- `--format` and atomic `--output` support with portable workflow paths,
-  machine-clean standard output, and format-independent exit behavior.
-- Reusable composite GitHub Action with validated inputs, report-path output,
-  Markdown step-summary support, exact-source installation, and CLI exit-code
-  propagation.
-- Local GitHub Action integration coverage and verified full-SHA pins for
-  project workflow dependencies.
+- Initial Python package, Typer CLI, typed Pydantic models, and quality tools.
+- Deterministic `.yml`/`.yaml` GitHub Actions workflow discovery and safe,
+  source-aware YAML parsing.
+- A reusable rule engine and explicit registry with 22 built-in security, cost,
+  reliability, and maintainability rules.
+- Explainable 0--100 health scoring, Rich terminal reporting, JSON schema 1.0,
+  Markdown exports, and configurable failure thresholds.
+- A reusable composite GitHub Action with Markdown summaries, report-path
+  output, validated inputs, and propagated CLI exit codes.
+- Public rule, scoring, report, GitHub Action, release, security, support, and
+  contributor documentation.
+- Release validation that builds distributions, validates metadata, smoke-tests
+  the wheel, and uploads artifacts on version-tag pushes.

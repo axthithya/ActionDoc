@@ -14,12 +14,15 @@ authors = [
 ]
 keywords = ["github-actions", "security", "linting", "cli"]
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 3 - Alpha",
     "Environment :: Console",
     "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Testing",
     "Typing :: Typed",
 ]
 dependencies = [
@@ -31,9 +34,11 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    "build>=1.2",
     "mypy>=1.10",
     "pytest>=8.2",
     "ruff>=0.5",
+    "twine>=6.0",
 ]
 
 [project.scripts]
@@ -49,6 +54,18 @@ path = "src/actiondoctor/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/actiondoctor"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src/actiondoctor",
+    "/README.md",
+    "/LICENSE",
+    "/pyproject.toml",
+    "/action.yml",
+    "/scripts",
+    "/docs",
+    "/examples",
+]
 
 [tool.ruff]
 target-version = "py312"

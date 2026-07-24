@@ -1,8 +1,8 @@
-# ActionDoctor Development Plan
+# ActionDoc Development Plan
 
 ## Purpose
 
-This plan builds ActionDoctor in vertical, testable phases while keeping the
+This plan builds ActionDoc in vertical, testable phases while keeping the
 MVP local, deterministic, and offline. Each phase should leave the repository
 usable and should avoid implementing later features prematurely.
 
@@ -406,6 +406,8 @@ duplicating scanner logic.
 
 ## Phase 8: Documentation and release preparation
 
+**Status: Complete (2026-07-24).**
+
 ### Goal
 
 Make the project understandable, reproducible, and ready for an initial
@@ -413,8 +415,8 @@ open-source release.
 
 ### Tasks
 
-- Complete installation, quick-start, CLI, configuration, rule, scoring,
-  report-format, and troubleshooting documentation.
+- Complete installation, quick-start, CLI, rule, scoring, report-format,
+  limitations, and troubleshooting documentation for implemented behavior.
 - Review architecture documentation against the implementation.
 - Add contributor instructions for creating and testing a rule.
 - Add a code of conduct, security policy, issue templates, and release
@@ -433,14 +435,16 @@ open-source release.
 - `CODE_OF_CONDUCT.md`
 - `SECURITY.md`
 - `CHANGELOG.md`
-- `docs/configuration.md`
-- `docs/scoring.md`
-- `docs/report-formats.md`
-- `docs/github-action.md`
-- `docs/rules/*.md`
+- `docs/SCORING.md`
+- `docs/REPORT_FORMATS.md`
+- `docs/GITHUB_ACTION.md`
+- `docs/RULES.md`
+- `docs/ROADMAP.md`
+- `docs/RELEASING.md`
 - `.github/ISSUE_TEMPLATE/*`
-- `.github/pull_request_template.md`
+- `.github/PULL_REQUEST_TEMPLATE.md`
 - `docs/RELEASE_CHECKLIST.md`
+- `.github/workflows/release-validation.yml`
 
 ### Tests required
 
